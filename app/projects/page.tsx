@@ -1,10 +1,8 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { HoverEffect } from "@/components/ui/card-hover-effect"
 import { Card, CardContent } from "@/components/ui/card"
-import { ExternalLink, Github, Calendar, Code, CheckCircle, Clock } from "lucide-react"
 import { portfolioData } from "@/lib/portfolio-data"
 import { useTranslations } from "@/hooks/use-translations"
 
@@ -16,29 +14,7 @@ import { LanguageToggle } from "@/components/language-toggle"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function ProjectsPage() {
-  const { t, locale } = useTranslations()
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return <CheckCircle className="h-4 w-4 text-green-500" />
-      case "In Development":
-        return <Clock className="h-4 w-4 text-blue-500" />
-      default:
-        return <Code className="h-4 w-4 text-gray-500" />
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-      case "In Development":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
-    }
-  }
+  const { locale } = useTranslations()
 
   return (
     <div className="h-screen overflow-hidden">
@@ -77,7 +53,7 @@ export default function ProjectsPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">
-          {language === 'fr' ? 'Mes Projets' : 'My Projects'}
+          {locale === 'fr' ? 'Mes Projets' : 'My Projects'}
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl">
           {locale === 'fr'
@@ -95,9 +71,7 @@ export default function ProjectsPage() {
 
 🛠️ Technologies: ${project.tech.join(" • ")}
 
-📊 Status: ${project.status}
-
-📅 Year: ${project.year}`,
+📊 Status: ${project.status}`,
           link: project.name === "Prellia.com" ? "https://prellia.com" :
                 project.name === "Pepis Dev" ? "https://pepis.pro" : undefined,
         }))}
@@ -125,8 +99,7 @@ export default function ProjectsPage() {
           </CardContent>
         </Card>
       </div>
-
-
+              </div>
             </div>
           </main>
         </SidebarInset>

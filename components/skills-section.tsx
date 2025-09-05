@@ -1,9 +1,9 @@
 "use client"
 
-import { ReusableCards } from "@/components/ui/reusable-card";
+import { HoverEffect } from "@/components/ui/card-hover-effect";
 import { portfolioData } from "@/lib/portfolio-data";
 import { useTranslations } from "@/hooks/use-translations";
-import { Code, Cloud, Wrench, Network, Users, Heart } from "lucide-react";
+
 
 interface SkillsSectionProps {
   title?: string;
@@ -20,37 +20,37 @@ export function SkillsSection({
   className = "",
   compact = false 
 }: SkillsSectionProps) {
-  const { t, language } = useTranslations();
+  const { t, locale } = useTranslations();
 
   const skillsData = [
     {
       title: t.skills.languages,
-      description: `${portfolioData.skills.languages.length} technologies`,
+      description: portfolioData.skills.languages.join(" • "),
     },
     {
       title: t.skills.cloud,
-      description: `${portfolioData.skills.cloud.length} platforms`,
+      description: portfolioData.skills.cloud.join(" • "),
     },
     {
       title: t.skills.tools,
-      description: `${portfolioData.skills.tools.length} tools`,
+      description: portfolioData.skills.tools.join(" • "),
     },
     {
       title: t.skills.networking,
-      description: `${portfolioData.skills.networking.length} specializations`,
+      description: portfolioData.skills.networking.join(" • "),
     },
     {
       title: t.skills.methodologies,
-      description: `${portfolioData.skills.methodologies.length} methodologies`,
+      description: portfolioData.skills.methodologies.join(" • "),
     },
     {
       title: t.skills.soft,
-      description: `${portfolioData.skills.soft.length} soft skills`,
+      description: portfolioData.skills.soft.join(" • "),
     },
   ];
 
   const defaultTitle = title || t.skills.title;
-  const defaultDescription = description || (language === 'en'
+  const defaultDescription = description || (locale === 'en'
     ? "Explore my technical expertise and professional skills through interactive cards"
     : "Explorez mon expertise technique et mes compétences professionnelles à travers des cartes interactives");
 

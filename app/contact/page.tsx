@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Mail, Phone, MapPin, Send, Clock, Globe } from "lucide-react"
+import { Send } from "lucide-react"
 import { useTranslations } from "@/hooks/use-translations"
 import { portfolioData } from "@/lib/portfolio-data"
 import { AppSidebar } from "@/components/app-sidebar"
@@ -101,7 +101,7 @@ export default function ContactPage() {
     setIsSubmitting(false)
     
     // In a real application, you would send the data to your backend
-    alert(language === 'fr' ? 'Message envoyé avec succès!' : 'Message sent successfully!')
+    alert(locale === 'fr' ? 'Message envoyé avec succès!' : 'Message sent successfully!')
   }
 
   return (
@@ -249,6 +249,7 @@ export default function ContactPage() {
           ]}
           className="grid-cols-1 sm:grid-cols-2 gap-4 px-0"
         />
+      </div>
               </div>
             </div>
           </main>

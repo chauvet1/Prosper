@@ -8,8 +8,9 @@ import {
   FolderOpen,
   BookOpen,
   Mail,
-  Command,
+  Settings,
 } from "lucide-react"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
@@ -58,6 +59,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: FolderOpen,
       },
       {
+        title: "Services",
+        url: "/services",
+        icon: Settings,
+      },
+      {
         title: t.nav.blog,
         url: "#blog",
         icon: BookOpen,
@@ -79,9 +85,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild tooltip="Prosper Merimee - Full Stack Developer">
               <a href="#">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
-                </div>
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarImage src={portfolioData.personal.avatar} alt={portfolioData.personal.name} />
+                  <AvatarFallback className="rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    {portfolioData.personal.name.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">Prosper Merimee</span>
                   <span className="truncate text-xs">Full Stack Developer</span>
