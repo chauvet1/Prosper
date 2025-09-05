@@ -1,0 +1,252 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model BlogPost {
+  id                    String          @id @default(cuid())
+  slug                  String          @unique
+  titleEn               String          @map("title_en")
+  titleFr               String          @map("title_fr")
+  excerptEn             String?         @map("excerpt_en")
+  excerptFr             String?         @map("excerpt_fr")
+  contentEn             String          @map("content_en")
+  contentFr             String          @map("content_fr")
+  metaDescriptionEn     String?         @map("meta_description_en")
+  metaDescriptionFr     String?         @map("meta_description_fr")
+  keywords              String[]
+  tags                  String[]
+  category              String          @default("general")
+  contentType           String          @default("article") @map("content_type")
+  technicalLevel        String          @default("intermediate") @map("technical_level")
+  targetAudience        String          @default("developers") @map("target_audience")
+  status                PostStatus      @default(DRAFT)
+  featured              Boolean         @default(false)
+  publishedAt           DateTime?       @map("published_at")
+  scheduledFor          DateTime?       @map("scheduled_for")
+  aiGenerated           Boolean         @default(true) @map("ai_generated")
+  generationConfig      Json?           @map("generation_config")
+  aiModel               String?         @default("gemini-1.5-pro") @map("ai_model")
+  generationPrompt      String?         @map("generation_prompt")
+  readTime              Int?            @map("read_time")
+  wordCount             Int?            @map("word_count")
+  seoScore              Int             @default(0) @map("seo_score")
+  featuredImageUrl      String?         @map("featured_image_url")
+  featuredImageAltEn    String?         @map("featured_image_alt_en")
+  featuredImageAltFr    String?         @map("featured_image_alt_fr")
+  featuredImagePrompt   String?         @map("featured_image_prompt")
+  imageGenerationConfig Json?           @map("image_generation_config")
+  viewCount             Int             @default(0) @map("view_count")
+  likeCount             Int             @default(0) @map("like_count")
+  shareCount            Int             @default(0) @map("share_count")
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
+  analytics             BlogAnalytics[]
+  images                BlogImage[]
+  seoMetrics            SeoMetric[]
+  socialShares          SocialShare[]
+
+  @@map("blog_posts")
+}
+
+model BlogImage {
+  id               String   @id @default(cuid())
+  postId           String   @map("post_id")
+  url              String
+  filename         String
+  altTextEn        String   @map("alt_text_en")
+  altTextFr        String   @map("alt_text_fr")
+  captionEn        String?  @map("caption_en")
+  captionFr        String?  @map("caption_fr")
+  prompt           String
+  generationConfig Json     @map("generation_config")
+  aiModel          String   @default("imagen-2") @map("ai_model")
+  style            String
+  aspectRatio      String   @map("aspect_ratio")
+  width            Int?
+  height           Int?
+  fileSize         Int?     @map("file_size")
+  mimeType         String?  @map("mime_type")
+  imageType        String   @default("featured") @map("image_type")
+  isActive         Boolean  @default(true) @map("is_active")
+  sortOrder        Int      @default(0) @map("sort_order")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  post             BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("blog_images")
+}
+
+model BlogAnalytics {
+  id              String   @id @default(cuid())
+  postId          String   @map("post_id")
+  date            DateTime @db.Date
+  views           Int      @default(0)
+  uniqueViews     Int      @default(0) @map("unique_views")
+  bounceRate      Float?   @map("bounce_rate")
+  avgTimeOnPage   Int?     @map("avg_time_on_page")
+  organicTraffic  Int      @default(0) @map("organic_traffic")
+  directTraffic   Int      @default(0) @map("direct_traffic")
+  socialTraffic   Int      @default(0) @map("social_traffic")
+  referralTraffic Int      @default(0) @map("referral_traffic")
+  scrollDepth     Float?   @map("scroll_depth")
+  interactions    Int      @default(0)
+  shares          Int      @default(0)
+  comments        Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+  post            BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, date])
+  @@map("blog_analytics")
+}
+
+model SeoMetric {
+  id               String   @id @default(cuid())
+  postId           String   @map("post_id")
+  keyword          String
+  searchVolume     Int?     @map("search_volume")
+  competitionLevel String?  @map("competition_level")
+  position         Int?     @map("position")
+  clickThroughRate Float?   @map("click_through_rate")
+  impressions      Int      @default(0)
+  clicks           Int      @default(0)
+  date             DateTime @db.Date
+  createdAt        DateTime @default(now()) @map("created_at")
+  post             BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, keyword, date])
+  @@map("seo_metrics")
+}
+
+model GenerationQueue {
+  id               String      @id @default(cuid())
+  topic            String
+  category         String?
+  contentType      String      @default("article") @map("content_type")
+  targetAudience   String      @default("developers") @map("target_audience")
+  technicalLevel   String      @default("intermediate") @map("technical_level")
+  scheduledFor     DateTime    @map("scheduled_for")
+  priority         Int         @default(5)
+  generationConfig Json?       @map("generation_config")
+  seoKeywords      String[]    @map("seo_keywords")
+  status           QueueStatus @default(PENDING)
+  attempts         Int         @default(0)
+  errorMessage     String?     @map("error_message")
+  generatedPostId  String?     @map("generated_post_id")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  @@map("generation_queue")
+}
+
+model BlogCategory {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  slug          String   @unique
+  descriptionEn String?  @map("description_en")
+  descriptionFr String?  @map("description_fr")
+  color         String?
+  icon          String?
+  sortOrder     Int      @default(0) @map("sort_order")
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("blog_categories")
+}
+
+model BlogTag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  usageCount  Int      @default(0) @map("usage_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("blog_tags")
+}
+
+model SocialShare {
+  id        String   @id @default(cuid())
+  postId    String   @map("post_id")
+  platform  String
+  shareUrl  String?  @map("share_url")
+  sharedAt  DateTime @default(now()) @map("shared_at")
+  likes     Int      @default(0)
+  comments  Int      @default(0)
+  shares    Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  post      BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("social_shares")
+}
+
+model NewsletterSubscriber {
+  id                String           @id @default(cuid())
+  email             String           @unique
+  name              String?
+  language          String           @default("en")
+  frequency         String           @default("weekly")
+  categories        String[]
+  status            SubscriberStatus @default(ACTIVE)
+  confirmed         Boolean          @default(false)
+  confirmationToken String?          @map("confirmation_token")
+  subscribedAt      DateTime         @default(now()) @map("subscribed_at")
+  lastEmailSent     DateTime?        @map("last_email_sent")
+  unsubscribedAt    DateTime?        @map("unsubscribed_at")
+  createdAt         DateTime         @default(now()) @map("created_at")
+
+  @@map("newsletter_subscribers")
+}
+
+model EmailCampaign {
+  id               String         @id @default(cuid())
+  name             String
+  subjectEn        String?        @map("subject_en")
+  subjectFr        String?        @map("subject_fr")
+  contentEn        String?        @map("content_en")
+  contentFr        String?        @map("content_fr")
+  postId           String?        @map("post_id")
+  scheduledFor     DateTime?      @map("scheduled_for")
+  sentAt           DateTime?      @map("sent_at")
+  targetLanguage   String?        @map("target_language")
+  targetCategories String[]       @map("target_categories")
+  recipientsCount  Int            @default(0) @map("recipients_count")
+  openedCount      Int            @default(0) @map("opened_count")
+  clickedCount     Int            @default(0) @map("clicked_count")
+  status           CampaignStatus @default(DRAFT)
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  @@map("email_campaigns")
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+  ARCHIVED
+}
+
+enum QueueStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum SubscriberStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENT
+  FAILED
+}

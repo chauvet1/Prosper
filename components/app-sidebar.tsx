@@ -8,7 +8,7 @@ import {
   FolderOpen,
   BookOpen,
   Mail,
-  Settings,
+  Wrench,
 } from "lucide-react"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
@@ -61,7 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {
         title: "Services",
         url: "/services",
-        icon: Settings,
+        icon: Wrench,
       },
       {
         title: t.nav.blog,

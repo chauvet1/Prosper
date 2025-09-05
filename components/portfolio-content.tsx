@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useTranslations } from "@/hooks/use-translations"
-import { getRecentPosts } from "@/lib/blog-data"
+import { useRecentPosts } from "@/hooks/use-blog-data"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,7 +15,7 @@ import { Mail, Phone, ExternalLink, Calendar, Clock } from "lucide-react"
 
 export function PortfolioContent() {
   const { t, locale } = useTranslations()
-  const recentPosts = getRecentPosts(3)
+  const { posts: recentPosts, loading, error } = useRecentPosts(3)
 
   return (
     <div className="flex flex-1 flex-col gap-8 p-6 pt-0">
@@ -55,9 +55,52 @@ export function PortfolioContent() {
 
       {/* Blog Section */}
       <section id="blog" className="space-y-6">
-        <h2 className="text-2xl font-bold">{t.blog.title}</h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">{t.blog.title}</h2>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open('/blog', '_blank')}
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            {locale === 'fr' ? 'Voir tous les articles' : 'View all posts'}
+          </Button>
+        </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {recentPosts.map((post, index) => (
+          {loading ? (
+            // Loading skeleton
+            Array.from({ length: 3 }).map((_, index) => (
+              <Card key={index} className="animate-pulse">
+                <CardHeader>
+                  <div className="h-6 bg-muted rounded w-3/4"></div>
+                  <div className="h-4 bg-muted rounded w-full"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                </CardContent>
+              </Card>
+            ))
+          ) : error ? (
+            // Error state
+            <Card className="col-span-full">
+              <CardContent className="p-6 text-center">
+                <p className="text-muted-foreground">
+                  Unable to load blog posts at the moment.
+                </p>
+              </CardContent>
+            </Card>
+          ) : recentPosts.length === 0 ? (
+            // Empty state
+            <Card className="col-span-full">
+              <CardContent className="p-6 text-center">
+                <p className="text-muted-foreground">
+                  No blog posts available yet.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            // Actual posts
+            recentPosts.map((post, index) => (
             <Card key={index}>
               <CardHeader>
                 <CardTitle className="text-lg">{post.title[locale]}</CardTitle>
@@ -79,13 +122,19 @@ export function PortfolioContent() {
                     <span>{post.readTime} min</span>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" className="w-full">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => window.open(`/blog/${post.id}`, '_blank')}
+                >
                   <ExternalLink className="mr-2 h-3 w-3" />
                   {t.blog.readMore}
                 </Button>
               </CardContent>
             </Card>
-          ))}
+          ))
+          )}
         </div>
       </section>
 

@@ -1,5 +1,4 @@
 import { MetadataRoute } from 'next'
-import { blogPosts } from '@/lib/blog-data'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://pepis.pro'
@@ -50,13 +49,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]
 
-  // Blog posts
-  const blogPages = blogPosts.map((post) => ({
-    url: `${baseUrl}/blog/${post.id}`,
-    lastModified: new Date(post.publishedAt),
-    changeFrequency: 'monthly' as const,
-    priority: 0.7,
-  }))
+  // Blog posts - Note: In production, you'd fetch this from API or generate dynamically
+  // For now, we'll just include the blog section
+  const blogPages = [
+    {
+      url: `${baseUrl}#blog`,
+      lastModified: new Date(),
+      changeFrequency: 'daily' as const,
+      priority: 0.8,
+    }
+  ]
 
   return [...staticPages, ...blogPages]
 }

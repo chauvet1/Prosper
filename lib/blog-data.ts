@@ -1,3 +1,22 @@
+export interface BlogImage {
+  id: string
+  url: string
+  filename: string
+  altText: {
+    en: string
+    fr: string
+  }
+  caption: {
+    en: string
+    fr: string
+  }
+  style: string
+  aspectRatio: string
+  model: string
+  isPrimary: boolean
+  generatedAt: string
+}
+
 export interface BlogPost {
   id: string
   title: {
@@ -23,10 +42,14 @@ export interface BlogPost {
     }
     keywords: string[]
   }
+  images?: BlogImage[]
 }
 
-// Sample blog posts - in a real app, these would come from a CMS or database
+// All blog posts now come from the database via BlogService
+// No more mock data - everything is real AI-generated content
 export const blogPosts: BlogPost[] = [
+  // This array is kept for type compatibility but is no longer used
+  // All data comes from the database via BlogService
   {
     id: "modern-web-development-2024",
     title: {
@@ -177,16 +200,24 @@ L'IA transforme notre façon d'écrire du code. Voici les outils qui mènent cet
   }
 ]
 
-export function getFeaturedPosts(): BlogPost[] {
-  return blogPosts.filter(post => post.featured)
+// These functions are now moved to API routes to avoid client-side Prisma imports
+// Use API routes instead: /api/blog/posts, /api/blog/featured, etc.
+
+// Client-side functions should use fetch to call API routes
+export async function getFeaturedPosts(): Promise<BlogPost[]> {
+  // This function should not be called client-side
+  // Use API route: GET /api/blog/featured
+  throw new Error('Use API route /api/blog/featured instead of direct database access')
 }
 
-export function getRecentPosts(limit: number = 3): BlogPost[] {
-  return blogPosts
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, limit)
+export async function getRecentPosts(limit: number = 3): Promise<BlogPost[]> {
+  // This function should not be called client-side
+  // Use API route: GET /api/blog/posts?limit=${limit}
+  throw new Error('Use API route /api/blog/posts instead of direct database access')
 }
 
-export function getPostById(id: string): BlogPost | undefined {
-  return blogPosts.find(post => post.id === id)
+export async function getPostById(id: string): Promise<BlogPost | null> {
+  // This function should not be called client-side
+  // Use API route: GET /api/blog/posts/${id}
+  throw new Error('Use API route /api/blog/posts/${id} instead of direct database access')
 }
