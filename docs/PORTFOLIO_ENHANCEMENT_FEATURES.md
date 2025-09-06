@@ -30,7 +30,7 @@ interface ChatAssistant {
     'Explain technical concepts',
     'Recommend solutions'
   ]
-  integration: 'Gemini API' | 'OpenAI' | 'Claude'
+  integration: 'Gemini API' 
   languages: ['English', 'French']
 }
 ```

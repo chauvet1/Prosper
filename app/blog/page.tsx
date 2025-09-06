@@ -16,6 +16,8 @@ import { useBlogPosts } from "@/hooks/use-blog-data"
 import { Calendar, Clock, Search, Filter, ExternalLink } from "lucide-react"
 import { Masonry } from "@/components/ui/responsive-masonry-layout"
 import { BlogMasonryCard } from "@/components/ui/blog-masonry-card"
+import { ServiceAdCard } from "@/components/ui/service-ad-card"
+import { AIAssistant } from "@/components/ui/ai-assistant"
 
 export default function BlogPage() {
   const { t, locale } = useTranslations()
@@ -167,16 +169,39 @@ export default function BlogPage() {
               </CardContent>
             </Card>
           ) : (
-            // Blog posts in masonry layout
+            // Blog posts in masonry layout with service ads
             <Masonry>
-              {filteredPosts.map((post) => (
-                <BlogMasonryCard
-                  key={post.id}
-                  post={post}
-                  locale={locale}
-                  onReadMore={(postId) => window.open(`/blog/${postId}`, '_blank')}
-                />
-              ))}
+              {(() => {
+                const items: React.ReactNode[] = [];
+                const serviceTypes = ['web-dev', 'ai-solutions', 'mobile-dev', 'ui-design', 'consulting', 'automation'] as const;
+
+                filteredPosts.forEach((post, index) => {
+                  // Add blog post
+                  items.push(
+                    <div key={post.id} onClick={() => window.open(`/blog/${post.id}`, '_blank')} className="cursor-pointer">
+                      <BlogMasonryCard
+                        post={post}
+                        locale={locale}
+                        onReadMore={(postId) => window.open(`/blog/${postId}`, '_blank')}
+                      />
+                    </div>
+                  );
+
+                  // Add service ad every 3-4 posts
+                  if ((index + 1) % 3 === 0 && index < filteredPosts.length - 1) {
+                    const serviceIndex = Math.floor(index / 3) % serviceTypes.length;
+                    items.push(
+                      <ServiceAdCard
+                        key={`service-${index}`}
+                        locale={locale}
+                        serviceType={serviceTypes[serviceIndex]}
+                      />
+                    );
+                  }
+                });
+
+                return items;
+              })()}
             </Masonry>
           )}
 
@@ -192,6 +217,9 @@ export default function BlogPage() {
           </div>
         </SidebarInset>
       </SidebarProvider>
+
+      {/* AI Assistant */}
+      <AIAssistant locale={locale} />
     </div>
   )
 }
