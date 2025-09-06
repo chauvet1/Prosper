@@ -108,70 +108,77 @@ Create a ${config.contentType} blog post with the following specifications:
 
 // Generate blog post using Gemini
 export async function generateBlogPost(config: GeminiBlogConfig): Promise<GeneratedContent> {
-  try {
-    const model = getGeminiClient().getGenerativeModel({
-      model: 'gemini-1.5-pro',
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-      },
-      safetySettings: [
-        {
-          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+  const modelsToTry = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-2.0-pro', 'gemini-2.0-flash']
+  let lastError = null
+  for (const modelName of modelsToTry) {
+    try {
+      const model = getGeminiClient().getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 8192,
         },
-        {
-          category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-          threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+          },
+        ],
+      })
+
+      // Generate English content
+      const englishPrompt = generateContentPrompt(config, 'en')
+      const englishResult = await model.generateContent(englishPrompt)
+      const englishResponse = englishResult.response.text()
+      
+      // Generate French content
+      const frenchPrompt = generateContentPrompt(config, 'fr')
+      const frenchResult = await model.generateContent(frenchPrompt)
+      const frenchResponse = frenchResult.response.text()
+
+      // Parse JSON responses
+      const englishContent = parseGeminiResponse(englishResponse)
+      const frenchContent = parseGeminiResponse(frenchResponse)
+
+      // Calculate read time (average 200 words per minute)
+      const wordCount = englishContent.content.split(' ').length
+      const readTime = Math.ceil(wordCount / 200)
+
+      return {
+        title: {
+          en: englishContent.title,
+          fr: frenchContent.title
         },
-      ],
-    })
-
-    // Generate English content
-    const englishPrompt = generateContentPrompt(config, 'en')
-    const englishResult = await model.generateContent(englishPrompt)
-    const englishResponse = englishResult.response.text()
-    
-    // Generate French content
-    const frenchPrompt = generateContentPrompt(config, 'fr')
-    const frenchResult = await model.generateContent(frenchPrompt)
-    const frenchResponse = frenchResult.response.text()
-
-    // Parse JSON responses
-    const englishContent = parseGeminiResponse(englishResponse)
-    const frenchContent = parseGeminiResponse(frenchResponse)
-
-    // Calculate read time (average 200 words per minute)
-    const wordCount = englishContent.content.split(' ').length
-    const readTime = Math.ceil(wordCount / 200)
-
-    return {
-      title: {
-        en: englishContent.title,
-        fr: frenchContent.title
-      },
-      excerpt: {
-        en: englishContent.excerpt,
-        fr: frenchContent.excerpt
-      },
-      content: {
-        en: englishContent.content,
-        fr: frenchContent.content
-      },
-      tags: englishContent.tags,
-      seoMetaDescription: {
-        en: englishContent.metaDescription,
-        fr: frenchContent.metaDescription
-      },
-      suggestedKeywords: englishContent.keywords,
-      readTime
+        excerpt: {
+          en: englishContent.excerpt,
+          fr: frenchContent.excerpt
+        },
+        content: {
+          en: englishContent.content,
+          fr: frenchContent.content
+        },
+        tags: englishContent.tags,
+        seoMetaDescription: {
+          en: englishContent.metaDescription,
+          fr: frenchContent.metaDescription
+        },
+        suggestedKeywords: englishContent.keywords,
+        readTime
+      }
+    } catch (error) {
+      lastError = error
+      console.error(`Error generating blog post with model ${modelName}:`, error)
+      // Try next model
     }
-  } catch (error) {
-    console.error('Error generating blog post:', error)
-    throw new Error('Failed to generate blog post with Gemini AI')
   }
+  // If all models fail, throw last error
+  throw new Error('Failed to generate blog post with all Gemini models. Last error: ' + (lastError && typeof lastError === 'object' && 'message' in lastError ? (lastError as any).message : JSON.stringify(lastError)))
 }
 
 // Parse Gemini response and extract JSON
@@ -188,10 +195,8 @@ function parseGeminiResponse(response: string): any {
 
 // Generate topic suggestions
 export async function generateTopicSuggestions(category: string, count: number = 10): Promise<string[]> {
-  try {
-    const model = getGeminiClient().getGenerativeModel({ model: 'gemini-1.5-flash' })
-    
-    const prompt = `
+  const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-2.0-pro']
+  const prompt = `
 As an expert in web development and technology, suggest ${count} compelling blog post topics for the category: ${category}.
 
 Topics should be:
@@ -203,23 +208,26 @@ Topics should be:
 
 Return only the topic titles, one per line, without numbering or bullets.
 `
-
-    const result = await model.generateContent(prompt)
-    const response = result.response.text()
-    
-    return response.split('\n').filter((topic: string) => topic.trim().length > 0).slice(0, count)
-  } catch (error) {
-    console.error('Error generating topic suggestions:', error)
-    return []
+  let lastError = null
+  for (const modelName of modelsToTry) {
+    try {
+      const model = getGeminiClient().getGenerativeModel({ model: modelName })
+      const result = await model.generateContent(prompt)
+      const response = result.response.text()
+      return response.split('\n').filter((topic: string) => topic.trim().length > 0).slice(0, count)
+    } catch (error) {
+      lastError = error
+      console.error(`Error generating topic suggestions with model ${modelName}:`, error)
+    }
   }
+  console.error('All Gemini models failed for topic suggestions:', lastError)
+  return []
 }
 
 // SEO keyword research
 export async function generateSEOKeywords(topic: string, count: number = 20): Promise<string[]> {
-  try {
-    const model = getGeminiClient().getGenerativeModel({ model: 'gemini-1.5-flash' })
-    
-    const prompt = `
+  const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-2.0-flash', 'gemini-1.5-pro', 'gemini-2.0-pro']
+  const prompt = `
 As an SEO expert, generate ${count} relevant keywords for the blog topic: "${topic}"
 
 Include:
@@ -231,15 +239,20 @@ Include:
 
 Return only the keywords, one per line, without explanations.
 `
-
-    const result = await model.generateContent(prompt)
-    const response = result.response.text()
-    
-    return response.split('\n').filter((keyword: string) => keyword.trim().length > 0).slice(0, count)
-  } catch (error) {
-    console.error('Error generating SEO keywords:', error)
-    return []
+  let lastError = null
+  for (const modelName of modelsToTry) {
+    try {
+      const model = getGeminiClient().getGenerativeModel({ model: modelName })
+      const result = await model.generateContent(prompt)
+      const response = result.response.text()
+      return response.split('\n').filter((keyword: string) => keyword.trim().length > 0).slice(0, count)
+    } catch (error) {
+      lastError = error
+      console.error(`Error generating SEO keywords with model ${modelName}:`, error)
+    }
   }
+  console.error('All Gemini models failed for SEO keywords:', lastError)
+  return []
 }
 
 // Content optimization suggestions
@@ -248,10 +261,8 @@ export async function optimizeContent(content: string, targetKeywords: string[])
   seoScore: number
   improvements: string[]
 }> {
-  try {
-    const model = getGeminiClient().getGenerativeModel({ model: 'gemini-1.5-pro' })
-    
-    const prompt = `
+  const modelsToTry = ['gemini-1.5-pro', 'gemini-2.0-pro', 'gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-2.0-flash']
+  const prompt = `
 As an SEO and content optimization expert, analyze this blog post content and provide optimization suggestions.
 
 **Content to analyze:**
@@ -275,18 +286,23 @@ Analyze:
 - Content gaps or missing information
 - Technical SEO improvements
 `
-
-    const result = await model.generateContent(prompt)
-    const response = result.response.text()
-    
-    return parseGeminiResponse(response)
-  } catch (error) {
-    console.error('Error optimizing content:', error)
-    return {
-      suggestions: [],
-      seoScore: 0,
-      improvements: []
+  let lastError = null
+  for (const modelName of modelsToTry) {
+    try {
+      const model = getGeminiClient().getGenerativeModel({ model: modelName })
+      const result = await model.generateContent(prompt)
+      const response = result.response.text()
+      return parseGeminiResponse(response)
+    } catch (error) {
+      lastError = error
+      console.error(`Error optimizing content with model ${modelName}:`, error)
     }
+  }
+  console.error('All Gemini models failed for content optimization:', lastError)
+  return {
+    suggestions: [],
+    seoScore: 0,
+    improvements: []
   }
 }
 

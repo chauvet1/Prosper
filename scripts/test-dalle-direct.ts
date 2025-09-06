@@ -43,7 +43,7 @@ async function testDALLEDirect() {
         prompt: prompt,
         n: 1,
         size: '1792x1024',
-        quality: 'hd',
+        quality: 'standard', // Enforce standard for $0.08 pricing
         style: 'natural'
       })
     })

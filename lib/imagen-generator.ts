@@ -1,17 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-// Initialize Gemini AI for image generation (Nano Banana)
-let genAI: GoogleGenerativeAI | null = null
-
-function getGeminiClient(): GoogleGenerativeAI {
-  if (!genAI) {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY environment variable is required for image generation')
-    }
-    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
-  }
-  return genAI
-}
+// Gemini is not used for image generation. Only DALL-E is used for images.
 
 export interface ImageGenerationConfig {
   blogTitle: string
@@ -48,53 +35,8 @@ export interface GeneratedImage {
 
 // Generate optimized image prompts using Gemini
 export async function generateImagePrompt(config: ImageGenerationConfig): Promise<string> {
-  try {
-    const model = getGeminiClient().getGenerativeModel({ model: 'gemini-1.5-pro' })
-
-    const prompt = `
-You are an expert at creating detailed, professional image generation prompts for technical blog posts.
-
-**Blog Details:**
-- Title: ${config.blogTitle}
-- Category: ${config.blogCategory}
-- Content Type: ${config.contentType}
-- Technical Level: ${config.technicalLevel}
-- Style Preference: ${config.style}
-- Aspect Ratio: ${config.aspectRatio}
-- Include Text: ${config.includeText ? 'Yes' : 'No'}
-
-**Blog Content Preview:**
-${config.blogContent.substring(0, 500)}...
-
-**Requirements:**
-Create a detailed image generation prompt that will produce a professional, visually appealing image for this blog post. The image should:
-
-1. **Visual Style**: ${config.style} design aesthetic
-2. **Technical Relevance**: Clearly relate to the blog topic
-3. **Professional Quality**: Suitable for a developer portfolio blog
-4. **Color Scheme**: Modern, tech-focused colors (blues, purples, greens, grays)
-5. **Composition**: Clean, uncluttered, ${config.aspectRatio} aspect ratio
-6. **Elements**: Include relevant tech icons, code elements, or abstract representations
-${config.includeText ? '7. **Text Elements**: Include minimal, readable text that enhances the design' : '7. **No Text**: Pure visual design without text overlays'}
-
-**Prompt Guidelines:**
-- Be specific about colors, lighting, and composition
-- Include technical elements relevant to the topic
-- Specify professional, clean aesthetic
-- Mention specific design elements (gradients, geometric shapes, etc.)
-- Keep it concise but detailed (under 200 words)
-
-Generate only the image prompt, no additional explanation:
-`
-
-    const result = await model.generateContent(prompt)
-    return result.response.text().trim()
-
-  } catch (error) {
-    console.error('Error generating image prompt:', error)
-    // Fallback prompt
-    return `Professional ${config.style} illustration for ${config.blogCategory} blog post about ${config.blogTitle}, clean modern design, tech-focused color palette, ${config.aspectRatio} aspect ratio, high quality, minimalist composition`
-  }
+  // Gemini is not used for image prompt generation. Always use fallback prompt.
+  return `Professional ${config.style} illustration for ${config.blogCategory} blog post about ${config.blogTitle}, clean modern design, tech-focused color palette, ${config.aspectRatio} aspect ratio, high quality, minimalist composition`
 }
 
 // Generate alt text and captions using Gemini
@@ -106,54 +48,15 @@ export async function generateImageMetadata(
   altText: { en: string; fr: string }
   caption: { en: string; fr: string }
 }> {
-  try {
-    const model = getGeminiClient().getGenerativeModel({ model: 'gemini-1.5-pro' })
-
-    const prompt = `
-Create SEO-optimized alt text and captions for a blog post image.
-
-**Image Prompt:** ${imagePrompt}
-**Blog Title:** ${blogTitle}
-**Blog Content Preview:** ${blogContent.substring(0, 300)}...
-
-Generate JSON response with:
-{
-  "altText": {
-    "en": "Descriptive alt text in English (50-125 characters, SEO-optimized)",
-    "fr": "Descriptive alt text in French (50-125 characters, SEO-optimized)"
-  },
-  "caption": {
-    "en": "Engaging caption in English (100-200 characters)",
-    "fr": "Engaging caption in French (100-200 characters)"
-  }
-}
-
-Requirements:
-- Alt text should be descriptive and include relevant keywords
-- Captions should be engaging and relate to the blog content
-- Both should be professional and suitable for a developer blog
-- French translations should be natural and culturally appropriate
-`
-
-    const result = await model.generateContent(prompt)
-    const response = result.response.text()
-    
-    // Parse JSON response
-    const cleanResponse = response.replace(/```json\n?|\n?```/g, '').trim()
-    return JSON.parse(cleanResponse)
-
-  } catch (error) {
-    console.error('Error generating image metadata:', error)
-    // Fallback metadata
-    return {
-      altText: {
-        en: `Professional illustration for ${blogTitle}`,
-        fr: `Illustration professionnelle pour ${blogTitle}`
-      },
-      caption: {
-        en: `Visual representation of key concepts discussed in this ${blogTitle.toLowerCase()} guide`,
-        fr: `Représentation visuelle des concepts clés discutés dans ce guide ${blogTitle.toLowerCase()}`
-      }
+  // Gemini is not used for image metadata. Always use fallback metadata.
+  return {
+    altText: {
+      en: `Professional illustration for ${blogTitle}`,
+      fr: `Illustration professionnelle pour ${blogTitle}`
+    },
+    caption: {
+      en: `Visual representation of key concepts discussed in this ${blogTitle.toLowerCase()} guide`,
+      fr: `Représentation visuelle des concepts clés discutés dans ce guide ${blogTitle.toLowerCase()}`
     }
   }
 }
@@ -207,7 +110,7 @@ export async function generateBlogImage(config: ImageGenerationConfig): Promise<
         aspectRatio: config.aspectRatio,
         generatedAt: new Date().toISOString(),
         model: imageUrl.includes('placeholder') ? 'placeholder' : 'dall-e-3',
-        cost: imageUrl.includes('placeholder') ? '$0.00' : (config.aspectRatio === '1:1' ? '$0.04' : '$0.08'),
+        cost: imageUrl.includes('placeholder') ? '$0.00' : (config.aspectRatio === '1:1' ? '$0.040' : '$0.080'),
         quality: 'standard'
       }
     }
@@ -279,26 +182,27 @@ async function generateWithDALLE(prompt: string, config: ImageGenerationConfig):
     console.log('🎨 Generating image with DALL-E 3 Standard ($0.04-$0.08)...')
 
     // Optimize size selection for cost-effectiveness
-    // 1024x1024 = $0.04, 1024x1792/1792x1024 = $0.08
+    // DALL-E 3 Standard Quality Pricing (as of 2024):
+    // 1024x1024 = $0.040, 1024x1792/1792x1024 = $0.080
     let size: string
     let estimatedCost: string
 
     switch (config.aspectRatio) {
       case '1:1':
         size = '1024x1024'
-        estimatedCost = '$0.04'
+        estimatedCost = '$0.040'
         break
       case '16:9':
         size = '1792x1024'
-        estimatedCost = '$0.08'
+        estimatedCost = '$0.080'
         break
       case '4:3':
         size = '1024x1792'
-        estimatedCost = '$0.08'
+        estimatedCost = '$0.080'
         break
       default:
         size = '1024x1024'
-        estimatedCost = '$0.04'
+        estimatedCost = '$0.040'
     }
 
     console.log(`💰 Using size ${size} (estimated cost: ${estimatedCost})`)
@@ -307,6 +211,7 @@ async function generateWithDALLE(prompt: string, config: ImageGenerationConfig):
     const optimizedPrompt = prompt.substring(0, 4000)
     console.log(`📝 Prompt length: ${optimizedPrompt.length}/4000 characters`)
 
+    // Always enforce 'standard' quality for cost control
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -318,7 +223,7 @@ async function generateWithDALLE(prompt: string, config: ImageGenerationConfig):
         prompt: optimizedPrompt,
         n: 1,
         size: size,
-        quality: 'standard', // Use standard quality for cost optimization
+        quality: 'standard', // FORCED: never allow 'hd' to avoid $0.12 cost
         style: (config.style === 'abstract' || config.style === 'modern') ? 'vivid' : 'natural'
       })
     })
