@@ -7,6 +7,8 @@ export interface ImageGenerationConfig {
   contentType: 'tutorial' | 'analysis' | 'news' | 'opinion' | 'guide'
   technicalLevel: 'beginner' | 'intermediate' | 'advanced'
   style: 'professional' | 'modern' | 'minimalist' | 'tech' | 'abstract'
+  accentColor?: 'cyan' | 'crimson' | 'amber'
+  seoKeywords?: string[]
   aspectRatio: '16:9' | '4:3' | '1:1' | '9:16'
   includeText: boolean
 }
@@ -36,7 +38,22 @@ export interface GeneratedImage {
 // Generate optimized image prompts using Gemini
 export async function generateImagePrompt(config: ImageGenerationConfig): Promise<string> {
   // Gemini is not used for image prompt generation. Always use fallback prompt.
-  return `Professional ${config.style} illustration for ${config.blogCategory} blog post about ${config.blogTitle}, clean modern design, tech-focused color palette, ${config.aspectRatio} aspect ratio, high quality, minimalist composition`
+  // --- MASTER PROMPT FRAMEWORK: "Neo-Editorial Ink Style" ---
+  // If accentColor is not provided, pick one randomly
+  const accentColors = ['cyan', 'crimson', 'amber'] as const;
+  const accentColor = config.accentColor || accentColors[Math.floor(Math.random() * accentColors.length)];
+
+  // SEO keywords
+  const keywords = config.seoKeywords && config.seoKeywords.length > 0
+    ? config.seoKeywords.join(', ')
+    : '';
+
+  return `Create a bold editorial-style digital illustration in the "Neo-Editorial Ink Style" for the blog topic: "${config.blogTitle}".\n
+Foundation: black & white with a single accent color: ${accentColor} (choose one: cyan, crimson, amber).\n
+Style: strong ink-like outlines with soft watercolor shading; flat lighting; centered subject with a few symbolic icons.\n
+MANDATORY BRAND SIGNATURE (must appear in every image, exactly):\n1) Monogram: "Mouil Prosper" micro-mark in the bottom-right INSIDE the frame, width ≈ 6–8% of canvas, opacity ≈ 8–12%, clean sans-serif, never warped.\n2) Diagonal accent brush stroke in ${accentColor} from upper-left to lower-right.\n3) Tiny ink-drop dot in the top-left corner (≈ 1% canvas size).\n4) Subtle magazine-style border; add a small notch around the bottom-right to “seat” the monogram.\n5) Fallback if text is unreliable: place a small three-dot triangle cluster next to the monogram (your secondary signature).\n
+Composition: clean, high-contrast, strong focal point, ample negative space for thumbnail readability.\nIllustrate the topic clearly and symbolically, remaining SEO-relevant.\n
+Keywords to visualize: ${keywords}.\nOutput: deliver at 4:3 and 1:1 crops. No extra logos/watermarks. Do not alter the signature rules.`;
 }
 
 // Generate alt text and captions using Gemini

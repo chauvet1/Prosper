@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input"
 import { useTranslations } from "@/hooks/use-translations"
 import { useBlogPosts } from "@/hooks/use-blog-data"
 import { Calendar, Clock, Search, Filter, ExternalLink } from "lucide-react"
+import { Masonry } from "@/components/ui/responsive-masonry-layout"
+import { BlogMasonryCard } from "@/components/ui/blog-masonry-card"
 
 export default function BlogPage() {
   const { t, locale } = useTranslations()
@@ -116,15 +118,15 @@ export default function BlogPage() {
             </div>
           </div>
 
-          {/* Blog Posts Grid */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {loading ? (
-              // Loading skeleton
-              Array.from({ length: 6 }).map((_, index) => (
+          {/* Blog Posts Masonry Layout */}
+          {loading ? (
+            // Loading skeleton with masonry layout
+            <Masonry>
+              {Array.from({ length: 8 }).map((_, index) => (
                 <Card key={index} className="animate-pulse">
                   <CardHeader>
-                    <div className="h-6 bg-muted rounded w-3/4"></div>
-                    <div className="h-4 bg-muted rounded w-full"></div>
+                    <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-muted rounded w-full mb-1"></div>
                     <div className="h-4 bg-muted rounded w-2/3"></div>
                   </CardHeader>
                   <CardContent>
@@ -137,97 +139,46 @@ export default function BlogPage() {
                     </div>
                   </CardContent>
                 </Card>
-              ))
-            ) : error ? (
-              // Error state
-              <Card className="col-span-full">
-                <CardContent className="p-6 text-center">
-                  <p className="text-muted-foreground">
-                    {locale === 'fr' 
-                      ? 'Impossible de charger les articles pour le moment.'
-                      : 'Unable to load articles at the moment.'
-                    }
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-2">{error}</p>
-                </CardContent>
-              </Card>
-            ) : filteredPosts.length === 0 ? (
-              // No results
-              <Card className="col-span-full">
-                <CardContent className="p-6 text-center">
-                  <p className="text-muted-foreground">
-                    {searchTerm || selectedCategory
-                      ? (locale === 'fr' ? 'Aucun article trouvé.' : 'No articles found.')
-                      : (locale === 'fr' ? 'Aucun article disponible.' : 'No articles available.')
-                    }
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              // Blog posts
-              filteredPosts.map((post) => (
-                <Card key={post.id} className="group hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                      {post.title[locale]}
-                    </CardTitle>
-                    <CardDescription className="line-clamp-3">
-                      {post.excerpt[locale]}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2">
-                      {post.tags.slice(0, 3).map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {post.tags.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{post.tags.length - 3}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Meta info */}
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          <span>
-                            {new Date(post.publishedAt).toLocaleDateString(
-                              locale === 'fr' ? 'fr-FR' : 'en-US'
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          <span>{post.readTime} min</span>
-                        </div>
-                      </div>
-                      {post.featured && (
-                        <Badge variant="default" className="text-xs">
-                          {locale === 'fr' ? 'À la une' : 'Featured'}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {/* Read more button */}
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                      onClick={() => window.open(`/blog/${post.id}`, '_blank')}
-                    >
-                      <ExternalLink className="mr-2 h-3 w-3" />
-                      {t.blog.readMore}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+              ))}
+            </Masonry>
+          ) : error ? (
+            // Error state
+            <Card className="max-w-md mx-auto">
+              <CardContent className="p-6 text-center">
+                <p className="text-muted-foreground">
+                  {locale === 'fr'
+                    ? 'Impossible de charger les articles pour le moment.'
+                    : 'Unable to load articles at the moment.'
+                  }
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">{error}</p>
+              </CardContent>
+            </Card>
+          ) : filteredPosts.length === 0 ? (
+            // No results
+            <Card className="max-w-md mx-auto">
+              <CardContent className="p-6 text-center">
+                <p className="text-muted-foreground">
+                  {searchTerm || selectedCategory
+                    ? (locale === 'fr' ? 'Aucun article trouvé.' : 'No articles found.')
+                    : (locale === 'fr' ? 'Aucun article disponible.' : 'No articles available.')
+                  }
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            // Blog posts in masonry layout
+            <Masonry>
+              {filteredPosts.map((post) => (
+                <BlogMasonryCard
+                  key={post.id}
+                  post={post}
+                  locale={locale}
+                  onReadMore={(postId) => window.open(`/blog/${postId}`, '_blank')}
+                />
+              ))}
+            </Masonry>
+          )}
 
           {/* Results count */}
           {!loading && !error && (

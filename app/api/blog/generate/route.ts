@@ -25,8 +25,13 @@ export async function POST(request: NextRequest) {
     if (config.generateImage) {
       console.log('🖼️ Generating blog image...')
       try {
-        const { generateBlogImage, ImageGenerationConfig } = await import('@/lib/imagen-generator')
-        const imageConfig: ImageGenerationConfig = {
+  const { generateBlogImage } = await import('@/lib/imagen-generator')
+
+        // Pick a random accent color for signature style
+        const accentColors = ['cyan', 'crimson', 'amber'] as const;
+        const accentColor = accentColors[Math.floor(Math.random() * accentColors.length)];
+
+  const imageConfig = {
           blogTitle: generatedContent.title.en,
           blogContent: generatedContent.excerpt.en,
           blogCategory: config.contentType,
@@ -34,7 +39,9 @@ export async function POST(request: NextRequest) {
           technicalLevel: config.technicalLevel,
           style: config.imageStyle || 'professional',
           aspectRatio: config.imageAspectRatio || '16:9',
-          includeText: false
+          includeText: false,
+          accentColor,
+          seoKeywords: generatedContent.suggestedKeywords || []
         }
 
         generatedImage = await generateBlogImage(imageConfig)
