@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { LanguageToggle } from "@/components/language-toggle"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { AIAssistant } from "@/components/ui/ai-assistant"
 
 export default function ServicesPage() {
   const { locale } = useTranslations()
@@ -202,6 +203,9 @@ export default function ServicesPage() {
           </main>
         </SidebarInset>
       </SidebarProvider>
+
+      {/* AI Assistant */}
+      <AIAssistant locale={locale} context="services" />
     </div>
   )
 }

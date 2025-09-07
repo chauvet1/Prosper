@@ -10,6 +10,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { LanguageToggle } from "@/components/language-toggle"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { AIAssistant } from "@/components/ui/ai-assistant"
 
 export default function PrivacyPolicyPage() {
   const { locale } = useTranslations()
@@ -200,6 +201,9 @@ export default function PrivacyPolicyPage() {
           </main>
         </SidebarInset>
       </SidebarProvider>
+
+      {/* AI Assistant */}
+      <AIAssistant locale={locale} context="privacy" />
     </div>
   )
 }

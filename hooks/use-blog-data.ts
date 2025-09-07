@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { BlogPost } from '@/lib/blog-data'
 
 interface BlogResponse {
@@ -22,36 +22,36 @@ export function useBlogPosts(options?: { limit?: number; featured?: boolean }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function fetchPosts() {
-      try {
-        setLoading(true)
-        setError(null)
+  const fetchPosts = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError(null)
 
-        const params = new URLSearchParams()
-        if (options?.limit) params.set('limit', options.limit.toString())
-        if (options?.featured) params.set('featured', 'true')
+      const params = new URLSearchParams()
+      if (options?.limit) params.set('limit', options.limit.toString())
+      if (options?.featured) params.set('featured', 'true')
 
-        const response = await fetch(`/api/blog/posts?${params}`)
-        const data: BlogResponse = await response.json()
+      const response = await fetch(`/api/blog/posts?${params}`)
+      const data: BlogResponse = await response.json()
 
-        if (data.success) {
-          setPosts(data.posts)
-        } else {
-          setError(data.error || 'Failed to fetch posts')
-        }
-      } catch (err) {
-        setError('Network error while fetching posts')
-        console.error('Error fetching blog posts:', err)
-      } finally {
-        setLoading(false)
+      if (data.success) {
+        setPosts(data.posts)
+      } else {
+        setError(data.error || 'Failed to fetch posts')
       }
+    } catch (err) {
+      setError('Network error while fetching posts')
+      console.error('Error fetching blog posts:', err)
+    } finally {
+      setLoading(false)
     }
-
-    fetchPosts()
   }, [options?.limit, options?.featured])
 
-  return { posts, loading, error, refetch: () => fetchPosts() }
+  useEffect(() => {
+    fetchPosts()
+  }, [fetchPosts])
+
+  return { posts, loading, error, refetch: fetchPosts }
 }
 
 // Hook for fetching a specific blog post
@@ -60,34 +60,34 @@ export function useBlogPost(id: string) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function fetchPost() {
-      if (!id) return
+  const fetchPost = useCallback(async () => {
+    if (!id) return
 
-      try {
-        setLoading(true)
-        setError(null)
+    try {
+      setLoading(true)
+      setError(null)
 
-        const response = await fetch(`/api/blog/posts/${id}`)
-        const data: PostResponse = await response.json()
+      const response = await fetch(`/api/blog/posts/${id}`)
+      const data: PostResponse = await response.json()
 
-        if (data.success) {
-          setPost(data.post)
-        } else {
-          setError(data.error || 'Failed to fetch post')
-        }
-      } catch (err) {
-        setError('Network error while fetching post')
-        console.error('Error fetching blog post:', err)
-      } finally {
-        setLoading(false)
+      if (data.success) {
+        setPost(data.post)
+      } else {
+        setError(data.error || 'Failed to fetch post')
       }
+    } catch (err) {
+      setError('Network error while fetching post')
+      console.error('Error fetching blog post:', err)
+    } finally {
+      setLoading(false)
     }
-
-    fetchPost()
   }, [id])
 
-  return { post, loading, error, refetch: () => fetchPost() }
+  useEffect(() => {
+    fetchPost()
+  }, [fetchPost])
+
+  return { post, loading, error, refetch: fetchPost }
 }
 
 // Hook for featured posts

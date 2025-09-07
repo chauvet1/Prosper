@@ -1,3 +1,5 @@
+"use client"
+
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   Breadcrumb,
@@ -16,8 +18,11 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 import { PortfolioContent } from "@/components/portfolio-content"
+import { AIAssistant } from "@/components/ui/ai-assistant"
+import { useTranslations } from "@/hooks/use-translations"
 
 export default function Home() {
+  const { locale } = useTranslations()
   return (
     <div className="h-screen overflow-hidden">
       <SidebarProvider defaultOpen={false}>
@@ -56,6 +61,9 @@ export default function Home() {
           </main>
         </SidebarInset>
       </SidebarProvider>
+
+      {/* AI Assistant */}
+      <AIAssistant locale={locale} context="home" />
     </div>
   )
 }

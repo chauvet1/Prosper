@@ -131,7 +131,9 @@ const Footer: React.FC<FooterProps> = ({
           {Array.from({ length: barCount }).map((_, index) => (
             <div
               key={index}
-              ref={(el) => (waveRefs.current[index] = el)}
+              ref={(el) => {
+                waveRefs.current[index] = el;
+              }}
               className="bg-primary/60 w-0.5 md:w-1 transition-all duration-300 ease-in-out"
               style={{
                 height: "15px",

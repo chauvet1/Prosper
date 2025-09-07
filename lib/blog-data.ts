@@ -35,6 +35,7 @@ export interface BlogPost {
   tags: string[]
   readTime: number
   featured: boolean
+  aiGenerated?: boolean
   seo: {
     metaDescription: {
       en: string

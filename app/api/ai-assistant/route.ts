@@ -4,8 +4,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export async function POST(request: NextRequest) {
+  let locale = 'en' // default locale
+
   try {
-    const { message, locale, context } = await request.json()
+    const requestData = await request.json()
+    const { message, context, pageContext, sessionId, conversationHistory } = requestData
+    locale = requestData.locale || 'en'
 
     if (!message) {
       return NextResponse.json(
@@ -15,6 +19,53 @@ export async function POST(request: NextRequest) {
     }
 
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
+
+    // Context-specific information based on current page
+    const contextSpecificInfo = {
+      home: {
+        focus: "General introduction and overview",
+        capabilities: "Provide portfolio overview, highlight key services, guide to other sections",
+        tone: "Welcoming and professional"
+      },
+      services: {
+        focus: "Service details and capabilities",
+        capabilities: "Explain services in detail, discuss pricing, provide examples, qualify leads",
+        tone: "Professional and consultative"
+      },
+      projects: {
+        focus: "Portfolio showcase and technical details",
+        capabilities: "Discuss specific projects, explain technologies, show case studies",
+        tone: "Technical but accessible"
+      },
+      contact: {
+        focus: "Lead generation and project initiation",
+        capabilities: "Qualify leads, gather requirements, schedule consultations, explain process",
+        tone: "Helpful and action-oriented"
+      },
+      blog: {
+        focus: "Content discovery and technical education",
+        capabilities: "Recommend articles, explain concepts, discuss trends",
+        tone: "Educational and informative"
+      },
+      privacy: {
+        focus: "Data protection and privacy policies",
+        capabilities: "Explain privacy practices, data handling, user rights",
+        tone: "Clear and reassuring"
+      },
+      terms: {
+        focus: "Service terms and legal agreements",
+        capabilities: "Clarify terms, explain policies, discuss agreements",
+        tone: "Clear and professional"
+      },
+      dashboard: {
+        focus: "Administrative support and guidance",
+        capabilities: "Help with interface, explain features, assist with tasks",
+        tone: "Helpful and instructional"
+      }
+    };
+
+    const currentPageContext = pageContext || context || 'home';
+    const pageInfo = contextSpecificInfo[currentPageContext as keyof typeof contextSpecificInfo] || contextSpecificInfo.home;
 
     // Personal context about you - customize this with your actual information
     const personalContext = `
@@ -60,17 +111,57 @@ CONTACT:
 Please respond as this professional's AI assistant, providing helpful information about their services, experience, and how they can help potential clients. Be friendly, professional, and informative.
 `
 
-    const systemPrompt = locale === 'fr' 
-      ? `${personalContext}\n\nRépondez en français de manière professionnelle et amicale. Aidez les visiteurs à comprendre les services offerts et comment ils peuvent bénéficier de cette expertise.`
-      : `${personalContext}\n\nRespond in English in a professional and friendly manner. Help visitors understand the services offered and how they can benefit from this expertise.`
+    const systemPrompt = locale === 'fr'
+      ? `${personalContext}\n\nCONTEXTE DE LA PAGE: ${pageInfo.focus}\nCAPACITÉS REQUISES: ${pageInfo.capabilities}\nTON: ${pageInfo.tone}\n\nRépondez en français de manière professionnelle et amicale. Aidez les visiteurs à comprendre les services offerts et comment ils peuvent bénéficier de cette expertise. Adaptez vos réponses au contexte de la page actuelle.`
+      : `${personalContext}\n\nPAGE CONTEXT: ${pageInfo.focus}\nREQUIRED CAPABILITIES: ${pageInfo.capabilities}\nTONE: ${pageInfo.tone}\n\nRespond in English in a professional and friendly manner. Help visitors understand the services offered and how they can benefit from this expertise. Adapt your responses to the current page context.`
 
-    const prompt = `${systemPrompt}\n\nUser question: ${message}\n\nPlease provide a helpful, informative response that addresses their question while highlighting relevant services or expertise when appropriate. Keep responses concise but comprehensive.`
+    // Build conversation context
+    let conversationContext = '';
+    if (conversationHistory && conversationHistory.length > 0) {
+      conversationContext = '\n\nCONVERSATION HISTORY:\n';
+      conversationHistory.forEach((msg: any) => {
+        conversationContext += `${msg.isUser ? 'User' : 'Assistant'}: ${msg.text}\n`;
+      });
+      conversationContext += '\n';
+    }
+
+    // Lead qualification logic
+    const leadQualificationPrompt = `
+LEAD QUALIFICATION INSTRUCTIONS:
+- If the user shows interest in services, gently gather information about their project
+- Ask qualifying questions about budget, timeline, project scope
+- Identify decision-making authority and urgency
+- Suggest next steps like consultation or project estimation
+- Be helpful and consultative, not pushy
+
+QUALIFICATION INDICATORS TO LOOK FOR:
+- Project requirements or needs
+- Budget discussions
+- Timeline mentions
+- Decision-making authority
+- Urgency indicators
+- Contact information sharing
+`;
+
+    const prompt = `${systemPrompt}${conversationContext}${leadQualificationPrompt}\n\nCurrent user question: ${message}\n\nPlease provide a helpful, informative response that addresses their question while highlighting relevant services or expertise when appropriate. Consider the conversation history to provide contextual and relevant responses. If this appears to be a qualified lead, suggest appropriate next steps. Keep responses concise but comprehensive.`
 
     const result = await model.generateContent(prompt)
     const response = result.response
     const text = response.text()
 
-    return NextResponse.json({ response: text })
+    // Lead qualification tracking (client-side only)
+    const leadData = {
+      sessionId,
+      conversationHistory: conversationHistory || [],
+      currentMessage: message,
+      context: currentPageContext,
+      timestamp: new Date().toISOString()
+    };
+
+    return NextResponse.json({
+      response: text,
+      leadData // Send lead data back to client for tracking
+    })
 
   } catch (error) {
     console.error('AI Assistant error:', error)

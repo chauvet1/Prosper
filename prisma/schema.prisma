@@ -250,3 +250,172 @@ enum CampaignStatus {
   SENT
   FAILED
 }
+
+enum SkillCategory {
+  LANGUAGE
+  FRAMEWORK
+  DATABASE
+  CLOUD
+  TOOL
+  METHODOLOGY
+  SOFT_SKILL
+  NETWORKING
+}
+
+enum SkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  COMPLETED
+  MAINTENANCE
+  ARCHIVED
+}
+
+// Portfolio Data Models
+model PersonalInfo {
+  id        String   @id @default(cuid())
+  name      String
+  title     String
+  phone     String?
+  email     String   @unique
+  address   String?
+  website   String?
+  linkedin  String?
+  github    String?
+  avatar    String?
+  aboutEn   String   @map("about_en")
+  aboutFr   String   @map("about_fr")
+  resumeUrl String?  @map("resume_url")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("personal_info")
+}
+
+model Skill {
+  id          String        @id @default(cuid())
+  name        String        @unique
+  category    SkillCategory
+  level       SkillLevel    @default(INTERMEDIATE)
+  yearsExp    Int?          @map("years_experience")
+  description String?
+  icon        String?
+  color       String?
+  featured    Boolean       @default(false)
+  sortOrder   Int           @default(0) @map("sort_order")
+  active      Boolean       @default(true)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@map("skills")
+}
+
+model Experience {
+  id            String    @id @default(cuid())
+  title         String
+  company       String
+  location      String?
+  startDate     DateTime  @map("start_date")
+  endDate       DateTime? @map("end_date")
+  current       Boolean   @default(false)
+  descriptionEn String    @map("description_en")
+  descriptionFr String    @map("description_fr")
+  technologies  String[]
+  achievements  String[]
+  website       String?
+  logo          String?
+  featured      Boolean   @default(false)
+  sortOrder     Int       @default(0) @map("sort_order")
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("experiences")
+}
+
+model Project {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  titleEn       String        @map("title_en")
+  titleFr       String        @map("title_fr")
+  descriptionEn String        @map("description_en")
+  descriptionFr String        @map("description_fr")
+  shortDescEn   String?       @map("short_description_en")
+  shortDescFr   String?       @map("short_description_fr")
+  technologies  String[]
+  category      String        @default("web")
+  status        ProjectStatus @default(COMPLETED)
+  featured      Boolean       @default(false)
+  demoUrl       String?       @map("demo_url")
+  githubUrl     String?       @map("github_url")
+  imageUrl      String?       @map("image_url")
+  images        String[]
+  startDate     DateTime?     @map("start_date")
+  endDate       DateTime?     @map("end_date")
+  clientName    String?       @map("client_name")
+  teamSize      Int?          @map("team_size")
+  myRole        String?       @map("my_role")
+  challenges    String[]
+  solutions     String[]
+  results       String[]
+  viewCount     Int           @default(0) @map("view_count")
+  likeCount     Int           @default(0) @map("like_count")
+  sortOrder     Int           @default(0) @map("sort_order")
+  active        Boolean       @default(true)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  @@map("projects")
+}
+
+model Education {
+  id            String    @id @default(cuid())
+  degree        String
+  field         String?
+  school        String
+  location      String?
+  startDate     DateTime  @map("start_date")
+  endDate       DateTime? @map("end_date")
+  current       Boolean   @default(false)
+  gpa           String?
+  descriptionEn String?   @map("description_en")
+  descriptionFr String?   @map("description_fr")
+  achievements  String[]
+  logo          String?
+  website       String?
+  featured      Boolean   @default(false)
+  sortOrder     Int       @default(0) @map("sort_order")
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("education")
+}
+
+model Certificate {
+  id            String    @id @default(cuid())
+  name          String
+  issuer        String
+  issueDate     DateTime  @map("issue_date")
+  expiryDate    DateTime? @map("expiry_date")
+  credentialId  String?   @map("credential_id")
+  credentialUrl String?   @map("credential_url")
+  description   String?
+  skills        String[]
+  logo          String?
+  featured      Boolean   @default(false)
+  verified      Boolean   @default(false)
+  sortOrder     Int       @default(0) @map("sort_order")
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("certificates")
+}
