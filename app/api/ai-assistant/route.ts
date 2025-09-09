@@ -1,15 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+import { rateLimiters, getClientIdentifier } from '@/lib/rate-limiter'
+import { ErrorLogger, AppError, ExternalServiceError, formatErrorResponse } from '@/lib/error-handler'
+import { getCacheHeaders } from '@/lib/cache'
+import aiModelManager from '@/lib/ai-model-manager'
 
 export async function POST(request: NextRequest) {
   let locale = 'en' // default locale
 
   try {
+    // Rate limiting
+    const identifier = getClientIdentifier(request)
+    const rateLimitResult = rateLimiters.aiAssistant.check(identifier)
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        formatErrorResponse(new AppError('Too many AI requests, please wait before trying again', 429)),
+        {
+          status: 429,
+          headers: rateLimiters.aiAssistant.getHeaders(identifier)
+        }
+      )
+    }
+
     const requestData = await request.json()
     const { message, context, pageContext, sessionId, conversationHistory } = requestData
     locale = requestData.locale || 'en'
+
+    // Validate required fields
+    if (!message || typeof message !== 'string') {
+      throw new AppError('Message is required', 400)
+    }
 
     if (!message) {
       return NextResponse.json(
@@ -18,7 +38,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
+    // Use AI Model Manager for multi-model fallback
 
     // Context-specific information based on current page
     const contextSpecificInfo = {
@@ -127,12 +147,21 @@ Please respond as this professional's AI assistant, providing helpful informatio
 
     // Lead qualification logic
     const leadQualificationPrompt = `
-LEAD QUALIFICATION INSTRUCTIONS:
+LEAD QUALIFICATION & APPOINTMENT BOOKING INSTRUCTIONS:
 - If the user shows interest in services, gently gather information about their project
 - Ask qualifying questions about budget, timeline, project scope
 - Identify decision-making authority and urgency
-- Suggest next steps like consultation or project estimation
+- For qualified leads, suggest scheduling a free consultation appointment
+- Mention that appointments can be booked directly through the appointment scheduler
+- Available times: Monday-Friday, 9 AM - 5 PM Eastern Time
+- Meeting options: Video call (preferred), phone call, or in-person (Toronto area)
 - Be helpful and consultative, not pushy
+
+APPOINTMENT BOOKING TRIGGERS:
+- User asks about consultation, meeting, or scheduling
+- User wants to discuss their project in detail
+- User is ready to move forward with a project
+- User asks about availability or next steps
 
 QUALIFICATION INDICATORS TO LOOK FOR:
 - Project requirements or needs
@@ -141,13 +170,14 @@ QUALIFICATION INDICATORS TO LOOK FOR:
 - Decision-making authority
 - Urgency indicators
 - Contact information sharing
+- Appointment or meeting requests
 `;
 
     const prompt = `${systemPrompt}${conversationContext}${leadQualificationPrompt}\n\nCurrent user question: ${message}\n\nPlease provide a helpful, informative response that addresses their question while highlighting relevant services or expertise when appropriate. Consider the conversation history to provide contextual and relevant responses. If this appears to be a qualified lead, suggest appropriate next steps. Keep responses concise but comprehensive.`
 
-    const result = await model.generateContent(prompt)
-    const response = result.response
-    const text = response.text()
+    // Use AI Model Manager with automatic fallback
+    const aiResponse = await aiModelManager.generateResponse(prompt, context)
+    const text = aiResponse.content
 
     // Lead qualification tracking (client-side only)
     const leadData = {
@@ -164,16 +194,36 @@ QUALIFICATION INDICATORS TO LOOK FOR:
     })
 
   } catch (error) {
-    console.error('AI Assistant error:', error)
-    
-    // Fallback responses
+    ErrorLogger.log(error as Error, {
+      locale,
+      endpoint: 'ai-assistant'
+    })
+
+    // Handle specific error types
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        formatErrorResponse(error),
+        { status: error.statusCode }
+      )
+    }
+
+    // Handle Gemini API errors
+    if (error instanceof Error && error.message.includes('API')) {
+      const apiError = new ExternalServiceError('Gemini AI', 'AI service temporarily unavailable')
+      return NextResponse.json(
+        formatErrorResponse(apiError),
+        { status: apiError.statusCode }
+      )
+    }
+
+    // Fallback responses for unknown errors
     const fallbackResponses = {
       en: "I'm here to help answer questions about web development, AI solutions, mobile apps, and consulting services. Feel free to ask about specific technologies, project examples, or how I can help with your next project!",
       fr: "Je suis là pour répondre aux questions sur le développement web, les solutions IA, les applications mobiles et les services de conseil. N'hésitez pas à poser des questions sur des technologies spécifiques, des exemples de projets, ou comment je peux vous aider avec votre prochain projet !"
     }
 
-    return NextResponse.json({ 
-      response: fallbackResponses[locale as keyof typeof fallbackResponses] || fallbackResponses.en 
-    })
+    return NextResponse.json({
+      response: fallbackResponses[locale as keyof typeof fallbackResponses] || fallbackResponses.en
+    }, { status: 200 }) // Return 200 for fallback responses
   }
 }

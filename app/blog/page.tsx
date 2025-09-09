@@ -18,12 +18,17 @@ import { Masonry } from "@/components/ui/responsive-masonry-layout"
 import { BlogMasonryCard } from "@/components/ui/blog-masonry-card"
 import { ServiceAdCard } from "@/components/ui/service-ad-card"
 import { AIAssistant } from "@/components/ui/ai-assistant"
+import SmartRecommendations from "@/components/ui/smart-recommendations"
+import { useSmartRecommendations } from "@/hooks/use-behavior-tracking"
 
 export default function BlogPage() {
   const { t, locale } = useTranslations()
   const { posts, loading, error } = useBlogPosts()
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+
+  // Smart recommendations with behavior tracking
+  const { sessionId, trackSearch, recommendationProps } = useSmartRecommendations('blog', locale)
 
   // Filter posts based on search and category
   const filteredPosts = posts.filter(post => {
@@ -93,7 +98,14 @@ export default function BlogPage() {
                 <Input
                   placeholder={locale === 'fr' ? 'Rechercher des articles...' : 'Search articles...'}
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value
+                    setSearchTerm(value)
+                    // Track search behavior
+                    if (value.length > 2) {
+                      trackSearch(value)
+                    }
+                  }}
                   className="pl-10"
                 />
               </div>
@@ -212,6 +224,17 @@ export default function BlogPage() {
                 ? `${filteredPosts.length} article${filteredPosts.length !== 1 ? 's' : ''} trouvé${filteredPosts.length !== 1 ? 's' : ''}`
                 : `${filteredPosts.length} article${filteredPosts.length !== 1 ? 's' : ''} found`
               }
+            </div>
+          )}
+
+          {/* Smart Recommendations */}
+          {!loading && !error && filteredPosts.length > 0 && (
+            <div className="mt-12">
+              <SmartRecommendations
+                {...recommendationProps}
+                limit={6}
+                className="max-w-6xl mx-auto"
+              />
             </div>
           )}
           </div>

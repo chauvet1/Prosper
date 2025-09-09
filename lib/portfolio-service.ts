@@ -1,20 +1,27 @@
 import { PrismaClient } from '@prisma/client'
+import { withCache, CACHE_KEYS, CACHE_TTL, invalidatePortfolioCache } from './cache'
 
 const prisma = new PrismaClient()
 
 export class PortfolioService {
   // Personal Info
   static async getPersonalInfo() {
-    try {
-      const personalInfo = await prisma.personalInfo.findFirst({
-        where: { active: true },
-        orderBy: { updatedAt: 'desc' }
-      })
-      return personalInfo
-    } catch (error) {
-      console.error('Error fetching personal info:', error)
-      return null
-    }
+    return withCache(
+      CACHE_KEYS.PORTFOLIO_PERSONAL,
+      async () => {
+        try {
+          const personalInfo = await prisma.personalInfo.findFirst({
+            where: { active: true },
+            orderBy: { updatedAt: 'desc' }
+          })
+          return personalInfo
+        } catch (error) {
+          console.error('Error fetching personal info:', error)
+          return null
+        }
+      },
+      CACHE_TTL.PORTFOLIO_DATA
+    )
   }
 
   static async updatePersonalInfo(data: any) {
@@ -23,8 +30,9 @@ export class PortfolioService {
         where: { active: true }
       })
 
+      let result
       if (existing) {
-        return await prisma.personalInfo.update({
+        result = await prisma.personalInfo.update({
           where: { id: existing.id },
           data: {
             ...data,
@@ -32,13 +40,18 @@ export class PortfolioService {
           }
         })
       } else {
-        return await prisma.personalInfo.create({
+        result = await prisma.personalInfo.create({
           data: {
             ...data,
             active: true
           }
         })
       }
+
+      // Invalidate cache after update
+      invalidatePortfolioCache()
+
+      return result
     } catch (error) {
       console.error('Error updating personal info:', error)
       throw error

@@ -419,3 +419,84 @@ model Certificate {
 
   @@map("certificates")
 }
+
+model Lead {
+  id                   String     @id @default(cuid())
+  name                 String
+  email                String
+  phone                String?
+  company              String?
+  message              String?
+  projectRequirements  String?    @map("project_requirements")
+  estimate             String?
+  source               String     @default("website")
+  locale               String     @default("en")
+  status               LeadStatus @default(NEW)
+  priority             LeadPriority @default(MEDIUM)
+  leadScore            Int        @default(0) @map("lead_score")
+  assignedTo           String?    @map("assigned_to")
+  followUpDate         DateTime?  @map("follow_up_date")
+  notes                String?
+  convertedAt          DateTime?  @map("converted_at")
+  createdAt            DateTime   @default(now()) @map("created_at")
+  updatedAt            DateTime   @updatedAt @map("updated_at")
+
+  @@map("leads")
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  NEGOTIATING
+  CONVERTED
+  LOST
+  UNQUALIFIED
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Appointment {
+  id                String            @id @default(cuid())
+  clientName        String            @map("client_name")
+  clientEmail       String            @map("client_email")
+  clientPhone       String?           @map("client_phone")
+  company           String?
+  projectType       String            @map("project_type")
+  description       String
+  date              String
+  time              String
+  duration          Int               @default(60) // minutes
+  timezone          String            @default("America/Toronto")
+  status            AppointmentStatus @default(SCHEDULED)
+  meetingType       MeetingType       @default(VIDEO) @map("meeting_type")
+  meetingLink       String?           @map("meeting_link")
+  notes             String?
+  preferredLanguage String?           @default("en") @map("preferred_language")
+  reminderSent      Boolean           @default(false) @map("reminder_sent")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  RESCHEDULED
+  NO_SHOW
+}
+
+enum MeetingType {
+  VIDEO
+  PHONE
+  IN_PERSON
+}

@@ -19,10 +19,13 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 import { PortfolioContent } from "@/components/portfolio-content"
 import { AIAssistant } from "@/components/ui/ai-assistant"
+import SmartRecommendations from "@/components/ui/smart-recommendations"
 import { useTranslations } from "@/hooks/use-translations"
+import { useSmartRecommendations } from "@/hooks/use-behavior-tracking"
 
 export default function Home() {
   const { locale } = useTranslations()
+  const { recommendationProps } = useSmartRecommendations('home', locale)
   return (
     <div className="h-screen overflow-hidden">
       <SidebarProvider defaultOpen={false}>
@@ -57,6 +60,15 @@ export default function Home() {
           <main className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth">
             <div className="h-full p-4 pb-8">
               <PortfolioContent />
+
+              {/* Smart Recommendations */}
+              <div className="mt-12">
+                <SmartRecommendations
+                  {...recommendationProps}
+                  limit={4}
+                  className="max-w-6xl mx-auto"
+                />
+              </div>
             </div>
           </main>
         </SidebarInset>

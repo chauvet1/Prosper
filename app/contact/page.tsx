@@ -17,6 +17,7 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbP
 import { LanguageToggle } from "@/components/language-toggle"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { AIAssistant } from "@/components/ui/ai-assistant"
+import AppointmentScheduler from "@/components/ui/appointment-scheduler"
 
 export default function ContactPage() {
   const { locale } = useTranslations()
@@ -221,6 +222,17 @@ export default function ContactPage() {
             </form>
           </CardContent>
         </Card>
+
+        {/* Appointment Scheduler */}
+        <div className="mt-8">
+          <AppointmentScheduler
+            locale={locale}
+            onAppointmentBooked={(appointmentId) => {
+              console.log('Appointment booked:', appointmentId)
+              // Could trigger analytics, notifications, etc.
+            }}
+          />
+        </div>
 
         {/* Contact Information */}
         <HoverEffect

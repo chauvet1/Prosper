@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+import aiModelManager from '@/lib/ai-model-manager'
+import { rateLimiters, getClientIdentifier } from '@/lib/rate-limiter'
+import { ErrorLogger, AppError, formatErrorResponse } from '@/lib/error-handler'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const identifier = getClientIdentifier(request)
+    const rateLimitResult = rateLimiters.projectEstimator.check(identifier)
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        formatErrorResponse(new AppError('Too many estimation requests, please wait before trying again', 429)),
+        {
+          status: 429,
+          headers: rateLimiters.projectEstimator.getHeaders(identifier)
+        }
+      )
+    }
+
     const { requirements, locale } = await request.json()
 
     if (!requirements) {
@@ -14,19 +28,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' })
-
     const estimationPrompt = locale === 'fr' 
       ? `Vous êtes un expert en estimation de projets de développement logiciel. Analysez les exigences suivantes et fournissez une estimation détaillée.
 
 EXIGENCES DU PROJET:
 Type de projet: ${requirements.projectType}
 Description: ${requirements.description}
-Fonctionnalités: ${requirements.features.join(', ')}
-Délai souhaité: ${requirements.timeline}
-Budget: ${requirements.budget}
-Complexité: ${requirements.complexity}
-Plateformes: ${requirements.platforms.join(', ')}
+Fonctionnalités: ${requirements.features ? requirements.features.join(', ') : 'Non spécifiées'}
+Délai souhaité: ${requirements.timeline || 'Non spécifié'}
+Budget: ${requirements.budget || 'Non spécifié'}
+Complexité: ${requirements.complexity || 'Non spécifiée'}
+Plateformes: ${requirements.platforms ? requirements.platforms.join(', ') : 'Non spécifiées'}
 Besoins de design: ${requirements.designNeeds}
 Maintenance: ${requirements.maintenanceNeeds}
 
@@ -46,11 +58,11 @@ Basez vos estimations sur les tarifs du marché actuel et les meilleures pratiqu
 PROJECT REQUIREMENTS:
 Project Type: ${requirements.projectType}
 Description: ${requirements.description}
-Features: ${requirements.features.join(', ')}
-Desired Timeline: ${requirements.timeline}
-Budget: ${requirements.budget}
-Complexity: ${requirements.complexity}
-Platforms: ${requirements.platforms.join(', ')}
+Features: ${requirements.features ? requirements.features.join(', ') : 'Not specified'}
+Desired Timeline: ${requirements.timeline || 'Not specified'}
+Budget: ${requirements.budget || 'Not specified'}
+Complexity: ${requirements.complexity || 'Not specified'}
+Platforms: ${requirements.platforms ? requirements.platforms.join(', ') : 'Not specified'}
 Design Needs: ${requirements.designNeeds}
 Maintenance: ${requirements.maintenanceNeeds}
 
@@ -66,9 +78,9 @@ Provide an estimate in JSON format with:
 
 Base your estimates on current market rates and industry best practices.`
 
-    const result = await model.generateContent(estimationPrompt)
-    const response = result.response
-    const text = response.text()
+    // Use AI Model Manager with automatic fallback
+    const aiResponse = await aiModelManager.generateResponse(estimationPrompt, 'services')
+    const text = aiResponse.content
 
     // Try to parse the JSON response
     let estimate
@@ -90,15 +102,25 @@ Base your estimates on current market rates and industry best practices.`
     return NextResponse.json({ estimate })
 
   } catch (error) {
-    console.error('Project estimation error:', error)
-    
-    // Return fallback estimate
-    const fallbackEstimate = generateFallbackEstimate(
-      request.body ? JSON.parse(await request.text()).requirements : {}, 
-      request.body ? JSON.parse(await request.text()).locale : 'en'
-    )
-    
-    return NextResponse.json({ estimate: fallbackEstimate })
+    ErrorLogger.log(error as Error, {
+      endpoint: 'project-estimator'
+    })
+
+    // Handle specific error types
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        formatErrorResponse(error),
+        { status: error.statusCode }
+      )
+    }
+
+    // Return fallback estimate for unknown errors
+    const fallbackEstimate = generateFallbackEstimate({}, 'en')
+
+    return NextResponse.json({
+      estimate: fallbackEstimate,
+      warning: 'Estimate generated using fallback method due to service unavailability'
+    })
   }
 }
 
