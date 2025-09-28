@@ -1,6 +1,6 @@
 // Multi-model AI manager with automatic fallback and quota management
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { ErrorLogger, CircuitBreaker } from './error-handler'
+import { ErrorLogger, CircuitBreaker, AIResponseError } from './error-handler'
 
 export interface AIModel {
   id: string
@@ -30,7 +30,6 @@ export interface AIResponse {
 
 class AIModelManager {
   private models: Map<string, AIModel> = new Map()
-  private currentModel: string | null = null
   private quotaResetInterval: NodeJS.Timeout | null = null
 
   constructor() {
@@ -111,8 +110,10 @@ class AIModelManager {
       circuitBreaker: new CircuitBreaker(10, 30000, 60000)
     })
 
-    // Set initial current model
-    this.currentModel = this.getAvailableModel()?.id || 'local-fallback'
+    // Validate fallback model exists
+    if (!this.models.has('local-fallback')) {
+      throw new Error('Critical error: Local fallback model not initialized')
+    }
   }
 
   private getNextMidnight(): number {
@@ -131,7 +132,7 @@ class AIModelManager {
           model.quotaUsed = 0
           model.quotaResetTime = this.getNextMidnight()
           model.isAvailable = true
-          ErrorLogger.log(new Error(`Quota reset for model: ${model.name}`))
+          ErrorLogger.logInfo(`Quota reset for model: ${model.name}`, { modelId: model.id })
         }
       }
     }, 60 * 60 * 1000) // Check every hour
@@ -221,9 +222,13 @@ class AIModelManager {
 
       if (!targetModel) {
         // All models exhausted, use local fallback
-        const fallback = this.models.get('local-fallback')!
+        const fallback = this.models.get('local-fallback')
+        if (!fallback) {
+          throw new Error('Critical error: Local fallback model not available')
+        }
+
         const content = this.getLocalFallbackResponse(prompt, context)
-        
+
         return {
           content,
           model: fallback.name,
@@ -259,7 +264,7 @@ class AIModelManager {
         }
 
         // Log successful usage
-        ErrorLogger.logWarning(`AI Model used: ${targetModel.name}`, {
+        ErrorLogger.logInfo(`AI Model used: ${targetModel.name}`, {
           tokensUsed,
           quotaRemaining: targetModel.quotaLimit - targetModel.quotaUsed,
           responseTime: response.responseTime
@@ -268,36 +273,50 @@ class AIModelManager {
         return response
 
       } catch (error) {
-        ErrorLogger.log(error as Error, { 
-          model: targetModel.name,
+        ErrorLogger.log(error as Error, {
+          model: targetModel?.name || 'unknown',
           attempt: attempts,
           prompt: prompt.substring(0, 100)
         })
 
         // Handle quota errors
-        if (error instanceof Error && error.message.includes('quota')) {
+        if (error instanceof Error && error.message.includes('quota') && targetModel) {
           targetModel.isAvailable = false
           targetModel.lastError = 'Quota exceeded'
-          ErrorLogger.logWarning(`Model ${targetModel.name} quota exceeded, switching to fallback`)
+          ErrorLogger.logWarning(`Model ${targetModel.name} quota exceeded, switching to fallback`, {
+            modelId: targetModel.id,
+            quotaUsed: targetModel.quotaUsed,
+            quotaLimit: targetModel.quotaLimit,
+            errorType: 'quota_exceeded'
+          })
           continue
         }
 
         // Handle other errors
         if (attempts >= maxAttempts) {
+          if (targetModel) {
+            throw new AIResponseError(targetModel.name, `Failed after ${maxAttempts} attempts: ${(error as Error).message}`)
+          }
           throw error
         }
-        
+
         // Mark model as temporarily unavailable and try next
-        targetModel.isAvailable = false
-        targetModel.lastError = (error as Error).message
+        if (targetModel) {
+          targetModel.isAvailable = false
+          targetModel.lastError = (error as Error).message
+        }
         continue
       }
     }
 
     // Final fallback
-    const fallback = this.models.get('local-fallback')!
+    const fallback = this.models.get('local-fallback')
+    if (!fallback) {
+      throw new Error('Critical error: Local fallback model not available')
+    }
+
     const content = this.getLocalFallbackResponse(prompt, context)
-    
+
     return {
       content,
       model: fallback.name,

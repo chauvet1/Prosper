@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { StructuredData } from "@/components/structured-data";
+import { ConvexProvider } from "convex/react";
+import convex from "@/lib/convex";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,20 +20,20 @@ export const metadata: Metadata = {
   title: "Mouil Prosper Merimee - Full Stack Developer | Portfolio",
   description: "Full Stack Developer with 4+ years experience in JavaScript, React.js, Next.js, Node.js, PHP. Specializing in scalable web applications and AI integration.",
   keywords: ["Full Stack Developer", "JavaScript", "React.js", "Next.js", "Node.js", "PHP", "Web Development", "Cameroon", "Yaoundé"],
-  authors: [{ name: "Mouil Moudon Prosper Merimee" }],
-  creator: "Mouil Moudon Prosper Merimee",
-  publisher: "Mouil Moudon Prosper Merimee",
+  authors: [{ name: "Mouil Prosper" }],
+  creator: "Mouil Prosper",
+  publisher: "Mouil Prosper",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://pepis.pro/",
-    title: "Mouil Prosper Merimee - Full Stack Developer",
+    title: "Mouil Prosper - Full Stack Developer",
     description: "Full Stack Developer specializing in modern web technologies and AI integration",
-    siteName: "Prosper Merimee Portfolio",
+    siteName: "Mouil Prosper Portfolio",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mouil Prosper Merimee - Full Stack Developer",
+    title: "Mouil Prosper  - Full Stack Developer",
     description: "Full Stack Developer specializing in modern web technologies and AI integration",
   },
   robots: {
@@ -57,15 +59,17 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <StructuredData />
-          {children}
-        </ThemeProvider>
+        <ConvexProvider client={convex}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <StructuredData />
+            {children}
+          </ThemeProvider>
+        </ConvexProvider>
       </body>
     </html>
   );

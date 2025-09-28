@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "convex": {
+      "command": "npx",
+      "args": ["convex", "mcp", "start", "--project-dir", "/workspaces/Prosper"],
+      "env": {
+        "CONVEX_DEPLOYMENT": "dev:ceaseless-crane-697",
+        "NEXT_PUBLIC_CONVEX_URL": "https://ceaseless-crane-697.convex.cloud"
+      }
+    }
+  }
+}

@@ -50,7 +50,6 @@ interface ProjectEstimate {
 
 const AIProjectEstimator = ({ locale, isOpen, onClose }: ProjectEstimatorProps) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
   const [requirements, setRequirements] = useState<ProjectRequirements>({
     projectType: '',
     description: '',
@@ -227,7 +226,12 @@ const AIProjectEstimator = ({ locale, isOpen, onClose }: ProjectEstimatorProps) 
     try {
       setLoading(true);
 
-      // Save lead data to database or send to CRM
+      // Use Convex mutation to create lead
+      const createLead = (await import("convex/react")).useMutation;
+      const { api } = await import("../convex/_generated/api");
+
+      // For now, we'll use a direct approach since we can't use hooks inside this function
+      // This will be refactored to use proper Convex hooks at the component level
       const response = await fetch('/api/leads', {
         method: 'POST',
         headers: {
@@ -684,12 +688,12 @@ const AIProjectEstimator = ({ locale, isOpen, onClose }: ProjectEstimatorProps) 
               </Button>
             )}
             {currentStep === 3 && (
-              <Button 
+              <Button
                 onClick={generateEstimate}
-                disabled={isLoading}
+                disabled={loading}
                 className="ml-auto"
               >
-                {isLoading ? (
+                {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     {t[locale].loading}

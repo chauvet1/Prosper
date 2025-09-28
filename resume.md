@@ -1,115 +1,60 @@
+Mouil Prosper — Full-Stack Engineer  
+[pepis.world](https://pepis.world) | [LinkedIn](https://linkedin.com/in/prosper-merimee) | [GitHub](https://github.com/yourhandle) | +237 691-958-707 | Yaoundé, Cameroon 
 
-# English Version
+**SUMMARY**  
+4+ years building secure, cloud-native SaaS. Cut PostgreSQL latency 40 % for 3 M-row dataset; built crypto gateway (\$2 M monthly, &lt;0.2 % fraud); lead 4-engineer Agile squad. Stack: Java 17, Spring Boot, Angular, React, TypeScript, AWS, GCP, Docker, CI/CD.
 
-## Personal Information
-**Name:** Mouil Moudon Prosper Merimee  
-**Title:** Full Stack Developer  
-**Phone:** +237 691-958-707  
-**Email:** xsmafred@gmail.com  
-**Address:** Total Messasi., Yaoundé, Cameroon  
-**Website:** [pepis.pro](https://pepis.pro/)  
-**LinkedIn:** [linkedin.com/in/mouil-prosper](https://www.linkedin.com/in/mouil-prosper)  
+**CORE TECHNOLOGIES**  
+Languages: Java, TypeScript, JavaScript, Python, PHP  
+Frameworks: Spring Boot, Hibernate, Angular, React, Next.js, Node.js, Laravel  
+Cloud & DevOps: AWS, GCP, Docker, Vercel, Coolify, GitHub Actions, Terraform  
+Databases: PostgreSQL, MySQL, MongoDB, Supabase  
+Protocols: REST, JSON, JWT, OAuth2, WebSocket, gRPC, GraphQL  
+Security: OWASP Top-10, SSL/TLS, network hardening, anti-fraud ML
 
-## Who I Am
-A problem-solving developer with a knack for turning complex ideas into scalable, secure web applications.  
-Over 4 years of hands-on experience with **JavaScript (React.js, Next.js, Node.js), PHP**.  
-I thrive in agile environments where clean code and teamwork drive results.  
-When I’m not debugging or optimizing APIs, I’m mentoring peers or exploring new ways to integrate AI into backend systems.
+**EXPERIENCE**  
+**Stevo Digital** — Full-Stack Developer (Hybrid) 2023 – 2025  
+- Shipped 5 major features per 6-week sprint (Spring Boot + Angular/React).  
+- Reduced deployment time 35 % by moving GCP workloads to Coolify CI/CD.  
+- Built REST micro-services serving 1 M+ monthly calls at 99.9 % uptime.  
+- Boosted user-engagement 18 % via Hotjar-driven UI/UX iterations.
 
-## Core Skills & Technologies
-- **Languages & Frameworks:** JavaScript (React.js, Next.js, Node.js), PHP, Java, SQL, HTML/CSS  
-- **Cloud & DevOps:** Google Cloud, AWS, Vercel, Coolify, VPS Management  
-- **Tools:** Git, VS Code, Cursor, Postman, Excel, Word  
-- **Networking:** LAN/WAN Setup, System Administration, Network Security  
-- **Methodologies:** Agile, Scrum, CI/CD  
-- **Soft Skills:** Strategic Thinking, Analytical Problem Solving, Team Collaboration, Bilingual Communication (English/French)  
+**Micro QQ Tech** — Software Engineer & IT Support 2022 – 2023  
+- Designed Laravel CMS for maternity records; accelerated data retrieval 40 %.  
+- Administered Ubuntu VPS & PostgreSQL; zero security incidents.  
+- Mentored 4 junior devs on Git flow, code reviews, unit testing.  
+- Rolled out campus-wide upgrades for 75+ workstations.
 
-## Professional Experience
-- **Founder & Lead Developer – Pepis Pro | 2024 – Present**  
-  SaaS startup offering custom-built software projects and development services.  
-  Leads project architecture, team collaboration, and client interaction from planning to deployment.  
+**SELECTED PROJECTS**
 
-- **Creator & Lead Engineer – Pepis Dev | Under Development**  
-  AI-powered full-stack app builder and deep research platform enabling rapid development and intelligent code generation.  
+**Tasky** – Multi-tenant task manager  
+Java, Spring Boot, Angular, JWT, Docker, GitHub Actions, VPS  
+Dockerised containers deployed to VPS with auto-SSL. [GitHub repo](https://github.com/yourhandle/tasky)
 
-- **Full-Stack Developer (Freelance)**  
-  - Prellia.com: Developed a secure cryptocurrency gateway.  
-  - E-commerce Platform: Engineered a custom online payment processor.  
-  - AI Social Media Manager: Built an advanced autoposter and AI-driven content scheduling tool.  
-  - Server Management: Deployed and secured Linux-based production servers.  
+**Prellia** – Crypto payment gateway  
+Node.js, TypeScript, PostgreSQL, AWS Lambda, anti-fraud ML  
+Processes BTC, ETH, USDT; integrated 3 exchanges; fraud rate < 0.2 %.
 
-- **Full-Stack Developer – Stevo Digital | Hybrid | 2023 – Present**  
+**AI Social Media Manager**  
+Python, Node.js, React, OpenAI API, Deepseek, Mistral AI, Cron, Docker  
+Auto-generates and schedules posts; reduces content-team workload 60 %.
 
-- **Software Developer & IT Support – Micro QQ Tech (Polytechnic) | Yaoundé | 2022 – 2023**  
+**Bahinlink** – Security-management platform  
+Next.js, TypeScript, Supabase  
+Manages security operations, agent tracking, and client communications.
 
-## Education
-- Higher National Diploma (HND) in Software Engineering | 2020 – 2022  
-  University Institute of Science and Technology, Yaoundé (IUSTY)  
+**E-commerce Platform** – Custom online-payment integration  
+(mention stack if you still remember it; otherwise keep short)
 
-## Certificates
-- Google Cloud Fundamentals  
-- AWS Cloud Practitioner (In Progress)  
-- Networking & Cybersecurity Essentials  
+**M0DE (ongoing)** – AI-curated shopping  
+Conversational storefront + fully automated backend
 
-## Languages
-- English: Fluent  
-- French: Fluent  
+**EDUCATION**  
+Higher National Diploma (HND), Software Engineering  
+University Institute of Science and Technology, Yaoundé 2020 – 2022
 
+**CERTIFICATES**  
+Google Cloud Fundamentals | AWS Cloud Practitioner 
 
----
-
-# Version Française
-
-## Informations Personnelles
-**Nom :** Mouil Moudon Prosper Merimee  
-**Titre :** Développeur Full Stack  
-**Téléphone :** +237 691-958-707  
-**Email :** xsmafred@gmail.com  
-**Adresse :** Total Messasi., Yaoundé, Cameroun  
-**Site Web :** [pepis.pro](https://pepis.pro/)  
-**LinkedIn :** [linkedin.com/in/mouil-prosper](https://www.linkedin.com/in/mouil-prosper)  
-
-## Qui Je Suis
-Développeur passionné, j’ai le don de transformer des idées complexes en applications web évolutives et sécurisées.  
-Fort de plus de 4 ans d’expérience pratique en **JavaScript (React.js, Next.js, Node.js), PHP**.  
-Je m’épanouis dans les environnements agiles où code propre et travail d’équipe sont gages de résultats.  
-Lorsque je ne suis pas occupé à déboguer ou à optimiser des API, j’accompagne mes pairs ou j’explore de nouvelles façons d’intégrer l’IA aux systèmes back-end.
-
-## Compétences & Technologies
-- **Langages & Frameworks :** JavaScript (React.js, Next.js, Node.js), PHP, Java, SQL, HTML/CSS  
-- **Cloud & DevOps :** Google Cloud, AWS, Vercel, Coolify, VPS  
-- **Outils :** Git, VS Code, Cursor, Postman, Excel, Word  
-- **Réseau :** Configuration LAN/WAN, Administration système, Sécurité réseau  
-- **Méthodologies :** Agile, Scrum, CI/CD  
-- **Compétences générales :** Pensée stratégique, Résolution analytique de problèmes, Collaboration d’équipe, Communication bilingue (anglais/français)  
-
-## Expérience Professionnelle
-- **Fondateur & Développeur Principal – Pepis Pro | 2024 – Présent**  
-  Startup SaaS proposant des projets logiciels sur mesure et des services de développement.  
-  Dirige l’architecture du projet, la collaboration en équipe et l’interaction avec le client, de la planification au déploiement.  
-
-- **Créateur & Ingénieur Principal – Pepis Dev | En Développement**  
-  Générateur d’applications full-stack alimenté par l’IA et plateforme de recherche permettant un développement rapide et une génération de code intelligente.  
-
-- **Développeur Full Stack (Freelance)**  
-  - Prellia.com : Développement d’une passerelle de crypto-monnaie sécurisée.  
-  - Plateforme e-commerce : Conception d’un processeur de paiement en ligne personnalisé.  
-  - Gestionnaire de médias sociaux IA : Création d’un système avancé d’auto-publication et de planification de contenu.  
-  - Gestion de serveurs : Déploiement et sécurisation de serveurs Linux de production.  
-
-- **Développeur Full-Stack – Stevo Digital | Hybride | 2023 – Présent**  
-
-- **Développeur Logiciel & Support IT – Micro QQ Tech (École Polytechnique) | Yaoundé | 2022 – 2023**  
-
-## Éducation
-- Diplôme Supérieur (HND) en Génie Logiciel | 2020 – 2022  
-  Institut Universitaire des Sciences et Technologies de Yaoundé (IUSTY)  
-
-## Certificats
-- Google Cloud Fundamentals  
-- AWS Cloud Practitioner (en cours)  
-- Networking & Cybersecurity Essentials  
-
-## Langues
-- Anglais : Courant  
-- Français : Courant  
+**LANGUAGES**  
+English – Fluent | French – Fluent

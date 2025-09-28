@@ -1,6 +1,6 @@
 export const portfolioData = {
   personal: {
-    name: "Mouil Moudon Prosper Merimee",
+    name: "Mouil Prosper",
     title: "Full Stack Developer",
     phone: "+237 691-958-707",
     email: "xsmafred@gmail.com",

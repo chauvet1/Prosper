@@ -60,6 +60,40 @@ export class ExternalServiceError extends AppError {
   }
 }
 
+// AI Assistant specific error types
+export class ModelUnavailableError extends AppError {
+  constructor(
+    modelName: string,
+    reason: 'quota_exceeded' | 'service_down' | 'timeout' | 'unknown' = 'unknown',
+    message?: string
+  ) {
+    super(
+      message || `AI model ${modelName} is unavailable: ${reason}`,
+      503,
+      true,
+      'MODEL_UNAVAILABLE'
+    )
+    this.name = 'ModelUnavailableError'
+  }
+}
+
+export class AIResponseError extends AppError {
+  constructor(
+    modelName: string,
+    message?: string,
+    public responseTime?: number,
+    public tokensUsed?: number
+  ) {
+    super(
+      message || `AI model ${modelName} failed to generate response`,
+      500,
+      true,
+      'AI_RESPONSE_ERROR'
+    )
+    this.name = 'AIResponseError'
+  }
+}
+
 // Error logger
 export class ErrorLogger {
   static log(error: Error, context?: Record<string, any>) {
@@ -106,6 +140,24 @@ export class ErrorLogger {
       console.warn('⚠️ WARNING:', message)
       if (context) {
         console.warn('🔍 Context:', context)
+      }
+    }
+  }
+
+  static logInfo(message: string, context?: Record<string, any>) {
+    const infoData = {
+      level: 'info',
+      message,
+      timestamp: new Date().toISOString(),
+      context: context || {}
+    }
+
+    if (process.env.NODE_ENV === 'production') {
+      console.info('INFO:', JSON.stringify(infoData, null, 2))
+    } else {
+      console.info('ℹ️ INFO:', message)
+      if (context) {
+        console.info('🔍 Context:', context)
       }
     }
   }
