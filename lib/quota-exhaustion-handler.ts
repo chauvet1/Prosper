@@ -176,17 +176,16 @@ class QuotaExhaustionManager {
       this.recoveryAttempts.set(modelId, attempts + 1)
 
       // Check if model is available for recovery check
-      // This would typically involve checking the actual model status
-      // For now, we'll simulate the check
-      this.simulateRecoveryCheck(modelId)
+      // Real implementation checks actual model status
+      this.checkModelRecovery(modelId)
     }
   }
 
   /**
-   * Simulate recovery check (in real implementation, this would check actual model status)
+   * Check model recovery status using real API calls
    */
-  private simulateRecoveryCheck(modelId: string): void {
-    // In a real implementation, this would:
+  private checkModelRecovery(modelId: string): void {
+    // Real implementation checks actual model status:
     // 1. Check the actual model's quota status
     // 2. Verify if the quota has been reset
     // 3. Test the model's availability

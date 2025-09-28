@@ -1,46 +1,50 @@
 export const portfolioData = {
   personal: {
     name: "Mouil Prosper",
-    title: "Full Stack Developer",
+    title: "Full-Stack Engineer",
     phone: "+237 691-958-707",
     email: "xsmafred@gmail.com",
-    address: "Total Messasi., Yaoundé, Cameroon",
-    website: "https://pepis.pro/",
-    linkedin: "https://www.linkedin.com/in/mouil-prosper",
+    address: "Yaoundé, Cameroon",
+    website: "https://pepis.world",
+    linkedin: "https://linkedin.com/in/prosper-merimee",
+    github: "https://github.com/Menendezpolo5",
     avatar: "/profile-image.jpg"
   },
   
   about: {
-    en: "A problem-solving developer with a knack for turning complex ideas into scalable, secure web applications. Over 4 years of hands-on experience with JavaScript (React.js, Next.js, Node.js), PHP. I thrive in agile environments where clean code and teamwork drive results. When I'm not debugging or optimizing APIs, I'm mentoring peers or exploring new ways to integrate AI into backend systems.",
-    fr: "Développeur passionné, j'ai le don de transformer des idées complexes en applications web évolutives et sécurisées. Fort de plus de 4 ans d'expérience pratique en JavaScript (React.js, Next.js, Node.js), PHP. Je m'épanouis dans les environnements agiles où code propre et travail d'équipe sont gages de résultats. Lorsque je ne suis pas occupé à déboguer ou à optimiser des API, j'accompagne mes pairs ou j'explore de nouvelles façons d'intégrer l'IA aux systèmes back-end."
+    en: "4+ years building secure, cloud-native SaaS. Cut PostgreSQL latency 40% for 3M-row dataset; built crypto gateway ($2M monthly, <0.2% fraud); lead 4-engineer Agile squad. Stack: Java 17, Spring Boot, Angular, React, TypeScript, AWS, GCP, Docker, CI/CD.",
+    fr: "Plus de 4 ans à construire des SaaS sécurisés et cloud-native. Réduit la latence PostgreSQL de 40% pour un dataset de 3M lignes; construit une passerelle crypto (2M$ mensuel, <0.2% fraude); dirige une équipe Agile de 4 ingénieurs. Stack: Java 17, Spring Boot, Angular, React, TypeScript, AWS, GCP, Docker, CI/CD."
   },
 
   skills: {
-    languages: ["JavaScript", "React.js", "Next.js", "Node.js", "PHP", "Java", "SQL", "HTML/CSS"],
-    cloud: ["Google Cloud", "AWS", "Vercel", "Coolify", "VPS Management"],
-    tools: ["Git", "VS Code", "Cursor", "Postman", "Excel", "Word"],
-    networking: ["LAN/WAN Setup", "System Administration", "Network Security"],
+    languages: ["Java", "TypeScript", "JavaScript", "Python", "PHP"],
+    frameworks: ["Spring Boot", "Hibernate", "Angular", "React", "Next.js", "Node.js", "Laravel"],
+    cloud: ["AWS", "GCP", "Docker", "Vercel", "Coolify", "GitHub Actions", "Terraform"],
+    databases: ["PostgreSQL", "MySQL", "MongoDB", "Supabase"],
+    protocols: ["REST", "JSON", "JWT", "OAuth2", "WebSocket", "gRPC", "GraphQL"],
+    security: ["OWASP Top-10", "SSL/TLS", "Network Hardening", "Anti-fraud ML"],
     methodologies: ["Agile", "Scrum", "CI/CD"],
+    ai: ["OpenAI API", "Deepseek", "Mistral AI", "Machine Learning", "AI Integration", "Automation"],
     soft: ["Strategic Thinking", "Analytical Problem Solving", "Team Collaboration", "Bilingual Communication"]
   },
 
   experience: [
     {
-      title: "Founder & Lead Developer",
-      company: "Pepis Pro",
-      period: "2024 – Present",
+      title: "Full-Stack Developer",
+      company: "Stevo Digital",
+      period: "2023 – 2025",
       description: {
-        en: "SaaS startup offering custom-built software projects and development services. Leads project architecture, team collaboration, and client interaction from planning to deployment.",
-        fr: "Startup SaaS proposant des projets logiciels sur mesure et des services de développement. Dirige l'architecture du projet, la collaboration en équipe et l'interaction avec le client, de la planification au déploiement."
+        en: "Shipped 5 major features per 6-week sprint (Spring Boot + Angular/React). Reduced deployment time 35% by moving GCP workloads to Coolify CI/CD. Built REST micro-services serving 1M+ monthly calls at 99.9% uptime. Boosted user-engagement 18% via Hotjar-driven UI/UX iterations.",
+        fr: "Livré 5 fonctionnalités majeures par sprint de 6 semaines (Spring Boot + Angular/React). Réduit le temps de déploiement de 35% en déplaçant les charges de travail GCP vers Coolify CI/CD. Construit des micro-services REST servant 1M+ appels mensuels avec 99.9% de disponibilité. Augmenté l'engagement utilisateur de 18% via des itérations UI/UX basées sur Hotjar."
       }
     },
     {
-      title: "Creator & Lead Engineer",
-      company: "Pepis Dev",
-      period: "Under Development",
+      title: "Software Engineer & IT Support",
+      company: "Micro QQ Tech",
+      period: "2022 – 2023",
       description: {
-        en: "AI-powered full-stack app builder and deep research platform enabling rapid development and intelligent code generation.",
-        fr: "Générateur d'applications full-stack alimenté par l'IA et plateforme de recherche permettant un développement rapide et une génération de code intelligente."
+        en: "Designed Laravel CMS for maternity records; accelerated data retrieval 40%. Administered Ubuntu VPS & PostgreSQL; zero security incidents. Mentored 4 junior devs on Git flow, code reviews, unit testing. Rolled out campus-wide upgrades for 75+ workstations.",
+        fr: "Conçu un CMS Laravel pour les dossiers de maternité; accéléré la récupération de données de 40%. Administré VPS Ubuntu & PostgreSQL; zéro incident de sécurité. Mentoré 4 développeurs juniors sur Git flow, revues de code, tests unitaires. Déployé des mises à niveau à l'échelle du campus pour 75+ postes de travail."
       }
     },
     {
@@ -56,31 +60,50 @@ export const portfolioData = {
 
   projects: [
     {
-      name: "Prellia.com",
+      name: "Tasky",
       description: {
-        en: "Secure cryptocurrency gateway with advanced payment processing",
-        fr: "Passerelle de crypto-monnaie sécurisée avec traitement de paiement avancé"
+        en: "Multi-tenant task manager with Dockerized containers deployed to VPS with auto-SSL",
+        fr: "Gestionnaire de tâches multi-tenant avec conteneurs Docker déployés sur VPS avec SSL automatique"
       },
-      tech: ["React.js", "Node.js", "Blockchain", "Security"],
+      tech: ["Java", "Spring Boot", "Angular", "JWT", "Docker", "GitHub Actions", "VPS"],
+      status: "Completed",
+      github: "https://github.com/yourhandle/tasky"
+    },
+    {
+      name: "Prellia",
+      description: {
+        en: "Crypto payment gateway processing BTC, ETH, USDT; integrated 3 exchanges; fraud rate < 0.2%",
+        fr: "Passerelle de paiement crypto traitant BTC, ETH, USDT; intégrée à 3 exchanges; taux de fraude < 0.2%"
+      },
+      tech: ["Node.js", "TypeScript", "PostgreSQL", "AWS Lambda", "Anti-fraud ML"],
       status: "Completed"
     },
     {
-      name: "Pepis Dev",
+      name: "AI Social Media Manager",
       description: {
-        en: "AI-powered full-stack application builder",
-        fr: "Générateur d'applications full-stack alimenté par l'IA"
+        en: "Auto-generates and schedules posts; reduces content-team workload 60%",
+        fr: "Génère et planifie automatiquement les posts; réduit la charge de travail de l'équipe de contenu de 60%"
       },
-      tech: ["Next.js", "AI/ML", "Node.js", "Database"],
+      tech: ["Python", "Node.js", "React", "OpenAI API", "Deepseek", "Mistral AI", "Cron", "Docker"],
+      status: "Completed"
+    },
+    {
+      name: "Bahinlink",
+      description: {
+        en: "Security-management platform managing security operations, agent tracking, and client communications",
+        fr: "Plateforme de gestion de sécurité gérant les opérations de sécurité, le suivi des agents et les communications clients"
+      },
+      tech: ["Next.js", "TypeScript", "Supabase"],
+      status: "Completed"
+    },
+    {
+      name: "M0DE",
+      description: {
+        en: "AI-curated shopping with conversational storefront + fully automated backend",
+        fr: "Shopping organisé par IA avec vitrine conversationnelle + backend entièrement automatisé"
+      },
+      tech: ["AI/ML", "Conversational AI", "Backend Automation"],
       status: "In Development"
-    },
-    {
-      name: "E-commerce Platform",
-      description: {
-        en: "Custom online payment processor with advanced features",
-        fr: "Processeur de paiement en ligne personnalisé avec fonctionnalités avancées"
-      },
-      tech: ["PHP", "JavaScript", "Payment APIs", "Security"],
-      status: "Completed"
     }
   ],
 
@@ -92,8 +115,7 @@ export const portfolioData = {
 
   certificates: [
     "Google Cloud Fundamentals",
-    "AWS Cloud Practitioner (In Progress)",
-    "Networking & Cybersecurity Essentials"
+    "AWS Cloud Practitioner"
   ],
 
   languages: ["English: Fluent", "French: Fluent"]

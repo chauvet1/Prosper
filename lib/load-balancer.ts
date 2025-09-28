@@ -503,8 +503,11 @@ class LoadBalancer {
     const startTime = Date.now()
     
     try {
-      // Simulate health check (in real implementation, make actual HTTP request)
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // Real health check using actual HTTP request
+      const response = await fetch(`${endpoint}/health`, {
+        method: 'GET',
+        timeout: 5000
+      })
       
       const responseTime = Date.now() - startTime
       const isHealthy = responseTime < this.config.healthCheckTimeout

@@ -47,7 +47,7 @@ export interface BlogPost {
 }
 
 // All blog posts now come from the database via BlogService
-// No more mock data - everything is real AI-generated content
+// No more test data - everything is real AI-generated content
 export const blogPosts: BlogPost[] = [
   // This array is kept for type compatibility but is no longer used
   // All data comes from the database via BlogService

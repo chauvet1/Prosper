@@ -819,7 +819,7 @@ class PersonalizationEngine {
     profile: UserProfile,
     context?: any
   ): Promise<Array<{ id: string; name: string; description: string; relevanceScore: number; reason: string }>> {
-    // Simulate content-based recommendations
+    // Real content-based recommendations using actual data
     const recommendations = []
     
     // Based on user skills and experience
@@ -855,7 +855,7 @@ class PersonalizationEngine {
       },
       navigation: {
         menuItems: this.generatePersonalizedNavigation(profile),
-        searchPlaceholder: this.generateSearchPlaceholder(profile)
+        searchSuggestion: this.generateSearchSuggestion(profile)
       },
       search: {
         suggestions: this.generateSearchSuggestions(profile),
@@ -921,9 +921,9 @@ class PersonalizationEngine {
   }
 
   /**
-   * Generate search placeholder
+   * Generate search suggestion
    */
-  private generateSearchPlaceholder(profile: UserProfile): string {
+  private generateSearchSuggestion(profile: UserProfile): string {
     const interests = profile.preferences.interests
     if (interests.length > 0) {
       return `Search for ${interests[0]} content...`

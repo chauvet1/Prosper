@@ -396,11 +396,15 @@ class FactChecker {
     verifiedFact?: VerifiedFact
     unverifiedClaim?: UnverifiedClaim
   }> {
-    // Simulate external API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // Real external API call for fact verification
+    const response = await fetch('/api/fact-check/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ claim: text, sources: sources })
+    })
     
-    // Mock verification logic
-    const isVerified = Math.random() > 0.3 // 70% verification rate
+    const result = await response.json()
+    const isVerified = result.verified || false
     
     if (isVerified) {
       return {

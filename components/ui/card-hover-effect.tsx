@@ -9,6 +9,7 @@ export const HoverEffect = ({
   items: {
     title: string;
     description: string;
+    seoDescription?: string;
     link?: string;
   }[];
   className?: string;
@@ -56,6 +57,11 @@ export const HoverEffect = ({
             <HoverCard>
               <HoverCardTitle>{item.title}</HoverCardTitle>
               <HoverCardDescription>{item.description}</HoverCardDescription>
+              {item.seoDescription && (
+                <div className="mt-2 text-xs text-muted-foreground/80 leading-relaxed">
+                  {item.seoDescription}
+                </div>
+              )}
             </HoverCard>
           </Component>
         );

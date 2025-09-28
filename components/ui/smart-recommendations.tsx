@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Clock, ArrowRight, Sparkles, BookOpen, Briefcase, FolderOpen, Lightbulb } from 'lucide-react'
 import Link from 'next/link'
+import { useConvexAuth } from 'convex/react'
+import { useAuthActions } from '@convex-dev/auth/react'
 
 interface ContentRecommendation {
   id: string
@@ -38,14 +40,24 @@ export default function SmartRecommendations({
   className = ""
 }: SmartRecommendationsProps) {
   const [recommendations, setRecommendations] = useState<ContentRecommendation[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [recommendationType, setRecommendationType] = useState<'standard' | 'ai' | 'default'>('standard')
   const [userInterests, setUserInterests] = useState<string[]>([])
 
   useEffect(() => {
-    fetchRecommendations()
+    // Only fetch on client side to avoid hydration issues
+    if (typeof window !== 'undefined') {
+      fetchRecommendations()
+    }
   }, [sessionId, currentPage, locale, limit, showAIRecommendations])
+
+  // Show loading state only after component has mounted
+  const [mounted, setMounted] = useState(false)
+  
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const fetchRecommendations = async () => {
     try {
@@ -139,34 +151,34 @@ export default function SmartRecommendations({
     }
   }
 
-  if (loading) {
-    return (
-      <div className={`space-y-4 ${className}`}>
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 animate-pulse" />
-          <h3 className="text-lg font-semibold">
-            {locale === 'fr' ? 'Chargement des recommandations...' : 'Loading recommendations...'}
-          </h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="h-3 bg-gray-200 rounded"></div>
-                  <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    )
-  }
+      if (!mounted || loading) {
+        return (
+          <div className={`space-y-4 ${className}`}>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 animate-pulse" />
+              <h3 className="text-lg font-semibold">
+                {locale === 'fr' ? 'Chargement des recommandations...' : 'Loading recommendations...'}
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="h-3 bg-muted rounded"></div>
+                      <div className="h-3 bg-muted rounded w-5/6"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )
+      }
 
   if (error) {
     return (

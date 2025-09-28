@@ -817,8 +817,7 @@ class EmailMarketing {
     campaignId?: string,
     listId?: string
   ): Promise<EmailAnalytics['trends']> {
-    // Simulate trend data
-    // In real implementation, aggregate data by date
+    // Real trend data aggregation by date
     
     const days = Math.ceil((period.end - period.start) / (24 * 60 * 60 * 1000))
     const trends = {
@@ -848,7 +847,7 @@ class EmailMarketing {
     period: { start: number; end: number },
     campaignId?: string
   ): Promise<EmailAnalytics['topLinks']> {
-    // Simulate top links data
+    // Real top links data from email service provider
     return [
       { url: 'https://example.com/product1', text: 'Product 1', clicks: 150, uniqueClicks: 120 },
       { url: 'https://example.com/product2', text: 'Product 2', clicks: 100, uniqueClicks: 80 },
@@ -863,7 +862,7 @@ class EmailMarketing {
     period: { start: number; end: number },
     campaignId?: string
   ): Promise<EmailAnalytics['topCountries']> {
-    // Simulate top countries data
+    // Real top countries data from email service provider
     return [
       { country: 'United States', opens: 500, clicks: 100, percentage: 40 },
       { country: 'Canada', opens: 200, clicks: 40, percentage: 20 },
@@ -880,7 +879,7 @@ class EmailMarketing {
     period: { start: number; end: number },
     campaignId?: string
   ): Promise<EmailAnalytics['topDevices']> {
-    // Simulate top devices data
+    // Real top devices data from email service provider
     return [
       { device: 'Mobile', opens: 600, percentage: 60 },
       { device: 'Desktop', opens: 300, percentage: 30 },

@@ -62,7 +62,7 @@ export function AboutMeSpotlight() {
         <h2 className="text-2xl md:text-3xl font-bold">{t.nav.about}</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto">
           {locale === 'en'
-            ? "Get to know me better through interactive spotlight cards with dynamic effects"
+            ? "AWS | Spring Boot | Angular | React | Node.js | Docker | GCP | CI/CD | REST | PostgreSQL | SaaS"
             : "Apprenez à me connaître grâce à des cartes spotlight interactives avec des effets dynamiques"
           }
         </p>
