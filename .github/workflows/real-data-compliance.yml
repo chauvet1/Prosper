@@ -1,0 +1,59 @@
+name: Real Data Compliance Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  real-data-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run real data compliance check
+      run: npm run check:real-data
+      
+    - name: Check for mock data patterns
+      run: |
+        echo "🔍 Checking for mock data violations..."
+        if grep -r -i "mock\|sample\|placeholder\|lorem ipsum\|test data\|fake\|dummy" --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" lib/ app/ scripts/ | grep -v "//" | grep -v "/*" | grep -v "*/"; then
+          echo "❌ Found mock data violations!"
+          exit 1
+        else
+          echo "✅ No mock data violations found"
+        fi
+        
+    - name: Verify real data usage
+      run: |
+        echo "🔍 Verifying real data usage..."
+        REAL_DATA_COUNT=$(grep -r "convex\.query\|convex\.mutation\|fetch(" --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" lib/ app/ | wc -l)
+        if [ "$REAL_DATA_COUNT" -lt 10 ]; then
+          echo "❌ Insufficient real data usage found ($REAL_DATA_COUNT instances)"
+          exit 1
+        else
+          echo "✅ Found $REAL_DATA_COUNT instances of real data usage"
+        fi
+        
+    - name: Check for hardcoded data
+      run: |
+        echo "🔍 Checking for hardcoded data..."
+        HARDCODED_COUNT=$(grep -r -E "const.*=.*\[.*\]|const.*=.*\{.*\}" --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" lib/ app/ | grep -v "//" | grep -v "/*" | grep -v "*/" | wc -l)
+        if [ "$HARDCODED_COUNT" -gt 5 ]; then
+          echo "❌ Too many hardcoded data instances found ($HARDCODED_COUNT)"
+          exit 1
+        else
+          echo "✅ Acceptable number of hardcoded data instances ($HARDCODED_COUNT)"
+        fi

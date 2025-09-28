@@ -179,7 +179,7 @@ GEMINI_API_KEY=your_gemini_api_key
 ### Phase 2: Complete Migration
 1. Remove old API routes once all frontend is migrated
 2. Update any external integrations
-3. Remove Prisma dependencies
+3. Remove any remaining legacy database references
 4. Clean up unused code
 
 ---

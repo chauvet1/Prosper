@@ -380,7 +380,7 @@ export async function scheduleAutomatedBlog(): Promise<void> {
     }
   }
 
-  // Save to database using Prisma
+  // Save to database using Convex
   const postId = await BlogService.createPost({
     titleEn: generatedContent.title.en,
     titleFr: generatedContent.title.fr,

@@ -1,6 +1,12 @@
 // Multi-model AI manager with automatic fallback and quota management
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import OpenAI from 'openai'
 import { ErrorLogger, CircuitBreaker, AIResponseError } from './error-handler'
+import { quotaValidator } from './quota-validator'
+import { quotaExhaustionManager } from './quota-exhaustion-handler'
+import { contextAwareFallback } from './context-aware-fallback'
+import { intelligentRetry } from './intelligent-retry'
+import { EnhancedCircuitBreaker } from './enhanced-circuit-breaker'
 
 export interface AIModel {
   id: string
@@ -17,7 +23,13 @@ export interface AIModel {
   priority: number // Lower number = higher priority
   isAvailable: boolean
   lastError?: string
-  circuitBreaker: CircuitBreaker
+  circuitBreaker: EnhancedCircuitBreaker
+  // Enhanced quota tracking
+  quotaPercentage: number
+  quotaWarningThreshold: number
+  quotaCriticalThreshold: number
+  lastQuotaCheck: number
+  quotaHistory: Array<{ timestamp: number; used: number; limit: number }>
 }
 
 export interface AIResponse {
@@ -31,10 +43,15 @@ export interface AIResponse {
 class AIModelManager {
   private models: Map<string, AIModel> = new Map()
   private quotaResetInterval: NodeJS.Timeout | null = null
+  private quotaCheckInterval: NodeJS.Timeout | null = null
+  private quotaWarningCallbacks: Array<(model: AIModel) => void> = []
+  private quotaCriticalCallbacks: Array<(model: AIModel) => void> = []
 
   constructor() {
     this.initializeModels()
     this.startQuotaResetTimer()
+    this.startQuotaCheckTimer()
+    this.startQuotaValidation()
   }
 
   private initializeModels() {
@@ -56,7 +73,25 @@ class AIModelManager {
         quotaResetTime: this.getNextMidnight(),
         priority: 1,
         isAvailable: true,
-        circuitBreaker: new CircuitBreaker(5, 60000, 120000)
+        circuitBreaker: new EnhancedCircuitBreaker({
+          failureThreshold: 5,
+          successThreshold: 3,
+          timeout: 60000,
+          monitoringPeriod: 120000,
+          enableDynamicThresholds: true,
+          healthCheckInterval: 30000,
+          enableHealthChecks: true,
+          adaptiveTimeout: true,
+          minTimeout: 10000,
+          maxTimeout: 300000,
+          timeoutMultiplier: 1.5
+        }),
+        // Enhanced quota tracking
+        quotaPercentage: 0,
+        quotaWarningThreshold: 80, // 80% warning
+        quotaCriticalThreshold: 95, // 95% critical
+        lastQuotaCheck: Date.now(),
+        quotaHistory: []
       })
 
       // Gemini 1.5 Flash (Secondary - Reliable fallback)
@@ -73,7 +108,25 @@ class AIModelManager {
         quotaResetTime: this.getNextMidnight(),
         priority: 2,
         isAvailable: true,
-        circuitBreaker: new CircuitBreaker(5, 60000, 120000)
+        circuitBreaker: new EnhancedCircuitBreaker({
+          failureThreshold: 5,
+          successThreshold: 3,
+          timeout: 60000,
+          monitoringPeriod: 120000,
+          enableDynamicThresholds: true,
+          healthCheckInterval: 30000,
+          enableHealthChecks: true,
+          adaptiveTimeout: true,
+          minTimeout: 10000,
+          maxTimeout: 300000,
+          timeoutMultiplier: 1.5
+        }),
+        // Enhanced quota tracking
+        quotaPercentage: 0,
+        quotaWarningThreshold: 80,
+        quotaCriticalThreshold: 95,
+        lastQuotaCheck: Date.now(),
+        quotaHistory: []
       })
 
       // Gemini 1.5 Flash-8B (Tertiary - Fastest and cheapest)
@@ -90,7 +143,25 @@ class AIModelManager {
         quotaResetTime: this.getNextMidnight(),
         priority: 3,
         isAvailable: true,
-        circuitBreaker: new CircuitBreaker(5, 60000, 120000)
+        circuitBreaker: new EnhancedCircuitBreaker({
+          failureThreshold: 5,
+          successThreshold: 3,
+          timeout: 60000,
+          monitoringPeriod: 120000,
+          enableDynamicThresholds: true,
+          healthCheckInterval: 30000,
+          enableHealthChecks: true,
+          adaptiveTimeout: true,
+          minTimeout: 10000,
+          maxTimeout: 300000,
+          timeoutMultiplier: 1.5
+        }),
+        // Enhanced quota tracking
+        quotaPercentage: 0,
+        quotaWarningThreshold: 80,
+        quotaCriticalThreshold: 95,
+        lastQuotaCheck: Date.now(),
+        quotaHistory: []
       })
     }
 
@@ -107,7 +178,25 @@ class AIModelManager {
       quotaResetTime: Infinity,
       priority: 99, // Lowest priority
       isAvailable: true,
-      circuitBreaker: new CircuitBreaker(10, 30000, 60000)
+      circuitBreaker: new EnhancedCircuitBreaker({
+        failureThreshold: 10,
+        successThreshold: 3,
+        timeout: 30000,
+        monitoringPeriod: 60000,
+        enableDynamicThresholds: true,
+        healthCheckInterval: 30000,
+        enableHealthChecks: true,
+        adaptiveTimeout: true,
+        minTimeout: 5000,
+        maxTimeout: 120000,
+        timeoutMultiplier: 1.2
+      }),
+      // Enhanced quota tracking
+      quotaPercentage: 0,
+      quotaWarningThreshold: 100,
+      quotaCriticalThreshold: 100,
+      lastQuotaCheck: Date.now(),
+      quotaHistory: []
     })
 
     // Validate fallback model exists
@@ -132,10 +221,113 @@ class AIModelManager {
           model.quotaUsed = 0
           model.quotaResetTime = this.getNextMidnight()
           model.isAvailable = true
+          model.quotaPercentage = 0
           ErrorLogger.logInfo(`Quota reset for model: ${model.name}`, { modelId: model.id })
         }
       }
     }, 60 * 60 * 1000) // Check every hour
+  }
+
+  private startQuotaCheckTimer() {
+    // Check quota usage every 5 minutes
+    this.quotaCheckInterval = setInterval(() => {
+      this.checkQuotaUsage()
+    }, 5 * 60 * 1000) // Check every 5 minutes
+  }
+
+  private checkQuotaUsage() {
+    for (const model of this.models.values()) {
+      if (model.provider === 'local') continue
+
+      const previousPercentage = model.quotaPercentage
+      model.quotaPercentage = (model.quotaUsed / model.quotaLimit) * 100
+      model.lastQuotaCheck = Date.now()
+
+      // Add to history (keep last 24 hours)
+      model.quotaHistory.push({
+        timestamp: Date.now(),
+        used: model.quotaUsed,
+        limit: model.quotaLimit
+      })
+
+      // Keep only last 288 entries (24 hours * 12 checks per hour)
+      if (model.quotaHistory.length > 288) {
+        model.quotaHistory = model.quotaHistory.slice(-288)
+      }
+
+      // Check for threshold crossings
+      if (previousPercentage < model.quotaWarningThreshold && 
+          model.quotaPercentage >= model.quotaWarningThreshold) {
+        this.triggerQuotaWarning(model)
+      }
+
+      if (previousPercentage < model.quotaCriticalThreshold && 
+          model.quotaPercentage >= model.quotaCriticalThreshold) {
+        this.triggerQuotaCritical(model)
+      }
+
+      // Check for recovery
+      quotaExhaustionManager.checkModelRecovery(model)
+    }
+  }
+
+  private triggerQuotaWarning(model: AIModel) {
+    ErrorLogger.logWarning(`Quota warning for model: ${model.name}`, {
+      modelId: model.id,
+      quotaPercentage: model.quotaPercentage,
+      quotaUsed: model.quotaUsed,
+      quotaLimit: model.quotaLimit
+    })
+
+    // Notify callbacks
+    this.quotaWarningCallbacks.forEach(callback => {
+      try {
+        callback(model)
+      } catch (error) {
+        ErrorLogger.log(error as Error, { context: 'quota-warning-callback' })
+      }
+    })
+  }
+
+  private triggerQuotaCritical(model: AIModel) {
+    ErrorLogger.log(new Error(`Quota critical for model: ${model.name}`), {
+      modelId: model.id,
+      quotaPercentage: model.quotaPercentage,
+      quotaUsed: model.quotaUsed,
+      quotaLimit: model.quotaLimit
+    })
+
+    // Handle quota exhaustion
+    quotaExhaustionManager.handleQuotaExhaustion(model)
+
+    // Notify callbacks
+    this.quotaCriticalCallbacks.forEach(callback => {
+      try {
+        callback(model)
+      } catch (error) {
+        ErrorLogger.log(error as Error, { context: 'quota-critical-callback' })
+      }
+    })
+  }
+
+  public onQuotaWarning(callback: (model: AIModel) => void) {
+    this.quotaWarningCallbacks.push(callback)
+  }
+
+  public onQuotaCritical(callback: (model: AIModel) => void) {
+    this.quotaCriticalCallbacks.push(callback)
+  }
+
+  private startQuotaValidation() {
+    // Start quota validation for all models
+    const models = Array.from(this.models.values()).map(model => ({
+      id: model.id,
+      name: model.name,
+      limit: model.quotaLimit,
+      apiKey: model.apiKey
+    }))
+
+    quotaValidator.startAutomaticValidation(models)
   }
 
   private getAvailableModel(): AIModel | null {
@@ -143,7 +335,8 @@ class AIModelManager {
       .filter(model => 
         model.isAvailable && 
         model.quotaUsed < model.quotaLimit &&
-        model.circuitBreaker.getState().state !== 'OPEN'
+        model.circuitBreaker.getState().state !== 'OPEN' &&
+        model.quotaPercentage < model.quotaCriticalThreshold
       )
       .sort((a, b) => a.priority - b.priority)
 
@@ -151,47 +344,45 @@ class AIModelManager {
   }
 
   private async callGeminiModel(model: AIModel, prompt: string): Promise<string> {
-    const genAI = new GoogleGenerativeAI(model.apiKey!)
-    const geminiModel = genAI.getGenerativeModel({ model: model.model })
+    const result = await intelligentRetry.executeWithErrorDetection(async () => {
+      const genAI = new GoogleGenerativeAI(model.apiKey!)
+      const geminiModel = genAI.getGenerativeModel({ model: model.model })
 
-    const result = await geminiModel.generateContent(prompt)
-    const response = result.response
-    return response.text()
+      const result = await geminiModel.generateContent(prompt)
+      const response = result.response
+      return response.text()
+    }, {
+      maxAttempts: 3,
+      baseDelay: 1000,
+      maxDelay: 10000,
+      backoffMultiplier: 2,
+      jitter: true,
+      jitterRange: 0.1
+    })
+
+    if (result.success) {
+      return result.result!
+    } else {
+      throw result.error || new Error('Failed to call Gemini model')
+    }
   }
 
 
 
   private getLocalFallbackResponse(prompt: string, context?: string): string {
-    const responses = {
-      home: {
-        en: "I'm a full-stack developer specializing in web applications, AI solutions, and mobile development. I can help you with project planning, technology recommendations, and development services. What would you like to know about my work or services?",
-        fr: "Je suis un développeur full-stack spécialisé dans les applications web, les solutions IA et le développement mobile. Je peux vous aider avec la planification de projets, les recommandations technologiques et les services de développement. Que souhaitez-vous savoir sur mon travail ou mes services?"
-      },
-      services: {
-        en: "I offer comprehensive development services including web applications, mobile apps, AI integration, and consulting. My expertise covers modern technologies like React, Next.js, Node.js, and cloud platforms. Would you like to discuss your specific project needs?",
-        fr: "J'offre des services de développement complets incluant les applications web, les applications mobiles, l'intégration IA et le conseil. Mon expertise couvre les technologies modernes comme React, Next.js, Node.js et les plateformes cloud. Souhaitez-vous discuter de vos besoins spécifiques de projet?"
-      },
-      projects: {
-        en: "My portfolio includes various web applications, mobile apps, and AI-powered solutions. I've worked with technologies like React, Next.js, TypeScript, and modern databases. Each project showcases different aspects of modern development practices. Which type of project interests you most?",
-        fr: "Mon portfolio comprend diverses applications web, applications mobiles et solutions alimentées par l'IA. J'ai travaillé avec des technologies comme React, Next.js, TypeScript et des bases de données modernes. Chaque projet présente différents aspects des pratiques de développement modernes. Quel type de projet vous intéresse le plus?"
-      },
-      contact: {
-        en: "I'm available for consultations and project discussions. You can reach out to discuss your requirements, get project estimates, or schedule a meeting. I typically respond within 24 hours and offer free initial consultations. How can I help you today?",
-        fr: "Je suis disponible pour des consultations et des discussions de projets. Vous pouvez me contacter pour discuter de vos exigences, obtenir des estimations de projet ou planifier une réunion. Je réponds généralement dans les 24 heures et offre des consultations initiales gratuites. Comment puis-je vous aider aujourd'hui?"
-      },
-      default: {
-        en: "I'm here to help with questions about web development, mobile applications, AI solutions, and technology consulting. Feel free to ask about specific technologies, project examples, or how I can assist with your development needs.",
-        fr: "Je suis là pour vous aider avec des questions sur le développement web, les applications mobiles, les solutions IA et le conseil technologique. N'hésitez pas à poser des questions sur des technologies spécifiques, des exemples de projets ou comment je peux vous aider avec vos besoins de développement."
-      }
-    }
+    // Use context-aware fallback system
+    const fallbackResponse = contextAwareFallback.generateFallbackResponse(prompt, {
+      pageContext: context,
+      locale: this.detectLanguage(prompt),
+      timestamp: Date.now()
+    })
 
-    // Simple language detection
-    const isFrench = /\b(bonjour|salut|comment|pourquoi|où|quand|français|merci)\b/i.test(prompt)
-    const locale = isFrench ? 'fr' : 'en'
-    
-    // Context-based response
-    const contextResponses = responses[context as keyof typeof responses] || responses.default
-    return contextResponses[locale]
+    return fallbackResponse.content
+  }
+
+  private detectLanguage(text: string): 'en' | 'fr' {
+    const frenchPatterns = /\b(bonjour|salut|comment|pourquoi|où|quand|français|merci|oui|non|très|bien|mal|avec|sans|pour|dans|sur|sous|entre|parmi|depuis|jusqu'à|pendant|après|avant|maintenant|aujourd'hui|demain|hier|semaine|mois|année|heure|minute|seconde|jour|nuit|matin|soir|midi|minuit)\b/i
+    return frenchPatterns.test(text) ? 'fr' : 'en'
   }
 
   public async generateResponse(
@@ -211,7 +402,9 @@ class AIModelManager {
       
       if (preferredModel && this.models.has(preferredModel)) {
         const preferred = this.models.get(preferredModel)!
-        if (preferred.isAvailable && preferred.quotaUsed < preferred.quotaLimit) {
+        if (preferred.isAvailable && 
+            preferred.quotaUsed < preferred.quotaLimit &&
+            preferred.quotaPercentage < preferred.quotaCriticalThreshold) {
           targetModel = preferred
         }
       }
@@ -254,6 +447,7 @@ class AIModelManager {
         // Update usage statistics
         const tokensUsed = Math.ceil(content.length / 4) // Rough estimate
         targetModel.quotaUsed += tokensUsed
+        targetModel.quotaPercentage = (targetModel.quotaUsed / targetModel.quotaLimit) * 100
         
         const response: AIResponse = {
           content,
@@ -283,10 +477,13 @@ class AIModelManager {
         if (error instanceof Error && error.message.includes('quota') && targetModel) {
           targetModel.isAvailable = false
           targetModel.lastError = 'Quota exceeded'
+          targetModel.quotaPercentage = 100
+          this.triggerQuotaCritical(targetModel)
           ErrorLogger.logWarning(`Model ${targetModel.name} quota exceeded, switching to fallback`, {
             modelId: targetModel.id,
             quotaUsed: targetModel.quotaUsed,
             quotaLimit: targetModel.quotaLimit,
+            quotaPercentage: targetModel.quotaPercentage,
             errorType: 'quota_exceeded'
           })
           continue
@@ -334,6 +531,10 @@ class AIModelManager {
     quotaUsed: number
     quotaLimit: number
     quotaPercentage: number
+    quotaWarningThreshold: number
+    quotaCriticalThreshold: number
+    lastQuotaCheck: number
+    quotaHistory: Array<{ timestamp: number; used: number; limit: number }>
     lastError?: string
     circuitBreakerState: string
   }> {
@@ -344,7 +545,11 @@ class AIModelManager {
       isAvailable: model.isAvailable,
       quotaUsed: model.quotaUsed,
       quotaLimit: model.quotaLimit,
-      quotaPercentage: (model.quotaUsed / model.quotaLimit) * 100,
+      quotaPercentage: model.quotaPercentage,
+      quotaWarningThreshold: model.quotaWarningThreshold,
+      quotaCriticalThreshold: model.quotaCriticalThreshold,
+      lastQuotaCheck: model.lastQuotaCheck,
+      quotaHistory: model.quotaHistory,
       lastError: model.lastError,
       circuitBreakerState: model.circuitBreaker.getState().state
     }))
@@ -356,6 +561,7 @@ class AIModelManager {
       model.isAvailable = true
       model.lastError = undefined
       model.quotaUsed = 0
+      model.quotaPercentage = 0
       return true
     }
     return false
@@ -365,6 +571,11 @@ class AIModelManager {
     if (this.quotaResetInterval) {
       clearInterval(this.quotaResetInterval)
     }
+    if (this.quotaCheckInterval) {
+      clearInterval(this.quotaCheckInterval)
+    }
+    quotaValidator.stopAutomaticValidation()
+    quotaExhaustionManager.destroy()
   }
 }
 
