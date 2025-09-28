@@ -1,10 +1,7 @@
 // Smart Content Recommendations Engine using real data
-import { PrismaClient } from '@prisma/client'
 import { BlogService } from './blog-service'
 import aiModelManager from './ai-model-manager'
 import { withCache, CACHE_KEYS, CACHE_TTL } from './cache'
-
-const prisma = new PrismaClient()
 
 export interface UserBehavior {
   sessionId: string

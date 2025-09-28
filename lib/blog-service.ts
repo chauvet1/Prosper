@@ -1,37 +1,20 @@
-import { prisma } from './prisma'
 import { BlogPost } from './blog-data'
-import { PostStatus, QueueStatus } from '@prisma/client'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '../convex/_generated/api'
+
+// Initialize Convex client
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
 
 export class BlogService {
   // Get all published blog posts
   static async getPublishedPosts(limit?: number): Promise<BlogPost[]> {
-    const posts = await prisma.blogPost.findMany({
-      where: {
-        status: PostStatus.PUBLISHED,
-      },
-      orderBy: {
-        publishedAt: 'desc',
-      },
-      take: limit,
-      cacheStrategy: { ttl: 300 }, // Cache for 5 minutes
-    })
-
+    const posts = await convex.query(api.blog.getPublishedPosts, { limit })
     return posts.map(this.transformDatabasePost)
   }
 
   // Get featured blog posts
   static async getFeaturedPosts(): Promise<BlogPost[]> {
-    const posts = await prisma.blogPost.findMany({
-      where: {
-        status: PostStatus.PUBLISHED,
-        featured: true,
-      },
-      orderBy: {
-        publishedAt: 'desc',
-      },
-      cacheStrategy: { ttl: 600 }, // Cache for 10 minutes
-    })
-
+    const posts = await convex.query(api.blog.getFeaturedPosts, {})
     return posts.map(this.transformDatabasePost)
   }
 
@@ -42,13 +25,7 @@ export class BlogService {
 
   // Get blog post by ID
   static async getPostById(id: string): Promise<BlogPost | null> {
-    const post = await prisma.blogPost.findUnique({
-      where: {
-        id,
-        status: PostStatus.PUBLISHED,
-      },
-      cacheStrategy: { ttl: 300 },
-    })
+    const post = await convex.query(api.blog.getPostById, { id })
 
     if (!post) return null
 
@@ -60,13 +37,7 @@ export class BlogService {
 
   // Get blog post by slug
   static async getPostBySlug(slug: string): Promise<BlogPost | null> {
-    const post = await prisma.blogPost.findUnique({
-      where: {
-        slug,
-        status: PostStatus.PUBLISHED,
-      },
-      cacheStrategy: { ttl: 300 },
-    })
+    const post = await convex.query(api.blog.getPostBySlug, { slug })
 
     if (!post) return null
 
@@ -78,55 +49,13 @@ export class BlogService {
 
   // Get posts by category
   static async getPostsByCategory(category: string, limit?: number): Promise<BlogPost[]> {
-    const posts = await prisma.blogPost.findMany({
-      where: {
-        status: PostStatus.PUBLISHED,
-        category,
-      },
-      orderBy: {
-        publishedAt: 'desc',
-      },
-      take: limit,
-      cacheStrategy: { ttl: 300 },
-    })
-
+    const posts = await convex.query(api.blog.getPostsByCategory, { category, limit })
     return posts.map(this.transformDatabasePost)
   }
 
   // Search blog posts
   static async searchPosts(query: string, language: 'en' | 'fr' = 'en'): Promise<BlogPost[]> {
-    const searchField = language === 'en' ? 'titleEn' : 'titleFr'
-    const contentField = language === 'en' ? 'contentEn' : 'contentFr'
-
-    const posts = await prisma.blogPost.findMany({
-      where: {
-        status: PostStatus.PUBLISHED,
-        OR: [
-          {
-            [searchField]: {
-              contains: query,
-              mode: 'insensitive',
-            },
-          },
-          {
-            [contentField]: {
-              contains: query,
-              mode: 'insensitive',
-            },
-          },
-          {
-            tags: {
-              hasSome: [query],
-            },
-          },
-        ],
-      },
-      orderBy: {
-        publishedAt: 'desc',
-      },
-      cacheStrategy: { ttl: 180 }, // Cache for 3 minutes
-    })
-
+    const posts = await convex.query(api.blog.searchPosts, { query, language })
     return posts.map(this.transformDatabasePost)
   }
 
@@ -161,20 +90,8 @@ export class BlogService {
     imageGenerationConfig?: any
   }): Promise<string | null> {
     try {
-      const slug = this.generateSlug(postData.titleEn)
-      
-      const post = await prisma.blogPost.create({
-        data: {
-          ...postData,
-          slug,
-          status: PostStatus.PUBLISHED,
-          publishedAt: new Date(),
-          keywords: postData.keywords || [],
-          tags: postData.tags || [],
-        },
-      })
-
-      return post.id
+      const result = await convex.mutation(api.blog.createPost, postData)
+      return result
     } catch (error) {
       console.error('Error creating post:', error)
       return null
@@ -198,30 +115,9 @@ export class BlogService {
     generationConfig?: any
   }): Promise<string | null> {
     try {
-      const image = await prisma.blogImage.create({
-        data: {
-          postId: imageData.blogPostId, // Note: schema uses postId, not blogPostId
-          url: imageData.url,
-          filename: imageData.filename,
-          prompt: imageData.prompt,
-          altTextEn: imageData.altTextEn,
-          altTextFr: imageData.altTextFr,
-          captionEn: imageData.captionEn || '',
-          captionFr: imageData.captionFr || '',
-          style: imageData.style,
-          aspectRatio: imageData.aspectRatio,
-          aiModel: imageData.model,
-          generationConfig: imageData.generationConfig || {
-            model: imageData.model,
-            style: imageData.style,
-            aspectRatio: imageData.aspectRatio,
-            generatedAt: imageData.generatedAt
-          },
-        },
-      })
-
-      console.log(`✅ Image saved to database with ID: ${image.id}`)
-      return image.id
+      const result = await convex.mutation(api.blog.saveImage, imageData)
+      console.log(`✅ Image saved to database with ID: ${result}`)
+      return result
     } catch (error) {
       console.error('❌ Error saving image to database:', error)
       return null
@@ -231,33 +127,8 @@ export class BlogService {
   // Get images for a blog post
   static async getPostImages(postId: string) {
     try {
-      const images = await prisma.blogImage.findMany({
-        where: {
-          postId: postId,
-          isActive: true
-        },
-        orderBy: { createdAt: 'desc' },
-        cacheStrategy: { ttl: 300 }
-      })
-
-      return images.map(image => ({
-        id: image.id,
-        url: image.url,
-        filename: image.filename,
-        altText: {
-          en: image.altTextEn,
-          fr: image.altTextFr
-        },
-        caption: {
-          en: image.captionEn || '',
-          fr: image.captionFr || ''
-        },
-        style: image.style,
-        aspectRatio: image.aspectRatio,
-        model: image.aiModel, // Use aiModel from schema
-        isPrimary: image.imageType === 'featured', // Derive from imageType
-        generatedAt: image.createdAt.toISOString() // Use createdAt instead of generatedAt
-      }))
+      const images = await convex.query(api.blog.getPostImages, { postId })
+      return images
     } catch (error) {
       console.error('Error fetching post images:', error)
       return []
@@ -278,14 +149,11 @@ export class BlogService {
     tags: string[]
     category: string
     featured: boolean
-    status: PostStatus
+    status: string
     seoScore: number
   }>): Promise<boolean> {
     try {
-      await prisma.blogPost.update({
-        where: { id },
-        data: updates,
-      })
+      await convex.mutation(api.blog.updatePost, { id, updates })
       return true
     } catch (error) {
       console.error('Error updating post:', error)
@@ -296,9 +164,7 @@ export class BlogService {
   // Delete blog post
   static async deletePost(id: string): Promise<boolean> {
     try {
-      await prisma.blogPost.delete({
-        where: { id },
-      })
+      await convex.mutation(api.blog.deletePost, { id })
       return true
     } catch (error) {
       console.error('Error deleting post:', error)
@@ -309,14 +175,7 @@ export class BlogService {
   // Increment view count
   static async incrementViewCount(id: string): Promise<void> {
     try {
-      await prisma.blogPost.update({
-        where: { id },
-        data: {
-          viewCount: {
-            increment: 1,
-          },
-        },
-      })
+      await convex.mutation(api.blog.incrementViewCount, { id })
     } catch (error) {
       console.error('Error incrementing view count:', error)
     }
@@ -324,21 +183,7 @@ export class BlogService {
 
   // Get blog analytics
   static async getPostAnalytics(postId: string, days: number = 30) {
-    const startDate = new Date()
-    startDate.setDate(startDate.getDate() - days)
-
-    return await prisma.blogAnalytics.findMany({
-      where: {
-        postId,
-        date: {
-          gte: startDate,
-        },
-      },
-      orderBy: {
-        date: 'desc',
-      },
-      cacheStrategy: { ttl: 300 },
-    })
+    return await convex.query(api.blog.getPostAnalytics, { postId, days })
   }
 
   // Add to generation queue
@@ -354,22 +199,8 @@ export class BlogService {
     seoKeywords?: string[]
   }): Promise<string | null> {
     try {
-      const queueItem = await prisma.generationQueue.create({
-        data: {
-          topic: queueData.topic,
-          category: queueData.category,
-          contentType: queueData.contentType || 'article',
-          targetAudience: queueData.targetAudience || 'developers',
-          technicalLevel: queueData.technicalLevel || 'intermediate',
-          scheduledFor: queueData.scheduledFor,
-          priority: queueData.priority || 5,
-          generationConfig: queueData.generationConfig,
-          seoKeywords: queueData.seoKeywords || [],
-          status: QueueStatus.PENDING,
-        },
-      })
-
-      return queueItem.id
+      const result = await convex.mutation(api.blog.addToGenerationQueue, queueData)
+      return result
     } catch (error) {
       console.error('Error adding to generation queue:', error)
       return null
@@ -378,37 +209,18 @@ export class BlogService {
 
   // Get pending generation items
   static async getPendingGenerations() {
-    return await prisma.generationQueue.findMany({
-      where: {
-        status: QueueStatus.PENDING,
-        scheduledFor: {
-          lte: new Date(),
-        },
-      },
-      orderBy: [
-        { priority: 'desc' },
-        { scheduledFor: 'asc' },
-      ],
-    })
+    return await convex.query(api.blog.getPendingGenerations, {})
   }
 
   // Update generation queue status
   static async updateGenerationStatus(
     id: string,
-    status: QueueStatus,
+    status: string,
     generatedPostId?: string,
     errorMessage?: string
   ): Promise<boolean> {
     try {
-      await prisma.generationQueue.update({
-        where: { id },
-        data: {
-          status,
-          generatedPostId,
-          errorMessage,
-          attempts: status === QueueStatus.FAILED ? { increment: 1 } : undefined,
-        },
-      })
+      await convex.mutation(api.blog.updateGenerationStatus, { id, status, generatedPostId, errorMessage })
       return true
     } catch (error) {
       console.error('Error updating generation status:', error)
@@ -418,26 +230,18 @@ export class BlogService {
 
   // Get blog categories
   static async getCategories() {
-    return await prisma.blogCategory.findMany({
-      where: { active: true },
-      orderBy: { sortOrder: 'asc' },
-      cacheStrategy: { ttl: 3600 }, // Cache for 1 hour
-    })
+    return await convex.query(api.blog.getCategories, {})
   }
 
   // Get popular tags
   static async getPopularTags(limit: number = 20) {
-    return await prisma.blogTag.findMany({
-      orderBy: { usageCount: 'desc' },
-      take: limit,
-      cacheStrategy: { ttl: 1800 }, // Cache for 30 minutes
-    })
+    return await convex.query(api.blog.getPopularTags, { limit })
   }
 
   // Helper methods
   private static transformDatabasePost(dbPost: any): BlogPost {
     return {
-      id: dbPost.id,
+      id: dbPost._id,
       title: {
         en: dbPost.titleEn,
         fr: dbPost.titleFr,
@@ -450,7 +254,7 @@ export class BlogService {
         en: dbPost.contentEn,
         fr: dbPost.contentFr,
       },
-      publishedAt: dbPost.publishedAt?.toISOString().split('T')[0] || dbPost.createdAt.toISOString().split('T')[0],
+      publishedAt: dbPost.publishedAt ? new Date(dbPost.publishedAt).toISOString().split('T')[0] : new Date(dbPost._creationTime).toISOString().split('T')[0],
       tags: dbPost.tags,
       readTime: dbPost.readTime || 5,
       featured: dbPost.featured,

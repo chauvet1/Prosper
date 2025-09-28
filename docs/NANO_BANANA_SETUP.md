@@ -49,8 +49,8 @@ interface ImageGenerationConfig {
 ```bash
 # Required API Keys
 GEMINI_API_KEY="your_gemini_api_key"          # For content + image generation
-DATABASE_URL="your_postgresql_url"            # Prisma database
-DIRECT_URL="your_postgresql_direct_url"       # For Prisma Accelerate
+NEXT_PUBLIC_CONVEX_URL="your_convex_url"      # Convex database
+CONVEX_DEPLOYMENT="your_convex_deployment"    # Convex deployment
 
 # Optional Fallback APIs
 OPENAI_API_KEY="your_openai_key"              # DALL-E 3 fallback

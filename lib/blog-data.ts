@@ -201,7 +201,7 @@ L'IA transforme notre façon d'écrire du code. Voici les outils qui mènent cet
   }
 ]
 
-// These functions are now moved to API routes to avoid client-side Prisma imports
+// These functions are now moved to API routes to avoid client-side Convex imports
 // Use API routes instead: /api/blog/posts, /api/blog/featured, etc.
 
 // Client-side functions should use fetch to call API routes
