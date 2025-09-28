@@ -103,8 +103,8 @@ export function PortfolioContent() {
             recentPosts.map((post, index) => (
             <Card key={index}>
               <CardHeader>
-                <CardTitle className="text-lg">{post.title[locale]}</CardTitle>
-                <CardDescription>{post.excerpt[locale]}</CardDescription>
+                <CardTitle className="text-lg">{post.title[locale] || post.title.en}</CardTitle>
+                <CardDescription>{post.excerpt[locale] || post.excerpt.en}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-wrap gap-2">
@@ -115,7 +115,7 @@ export function PortfolioContent() {
                 <div className="flex justify-between items-center text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    <span>{new Date(post.publishedAt).toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US')}</span>
+                    <span>{new Date(post.publishedAt).toLocaleDateString((locale || 'en') === 'fr' ? 'fr-FR' : 'en-US')}</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
