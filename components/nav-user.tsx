@@ -7,6 +7,10 @@ import {
   Shield,
   FileText,
   FolderOpen,
+  LogIn,
+  LogOut,
+  User,
+  UserPlus,
 } from "lucide-react"
 
 import {
@@ -29,6 +33,10 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useAuth } from '@workos-inc/authkit-nextjs/components'
+import { signOut } from '@workos-inc/authkit-nextjs'
+import { AuthModal } from "@/components/auth-modal"
+import { Button } from "@/components/ui/button"
 
 export function NavUser({
   user,
@@ -40,6 +48,48 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const { user: authUser, loading } = useAuth()
+  
+  const isAuthenticated = !!authUser
+  const isLoading = loading
+
+  // Show login/signup buttons if not authenticated
+  if (!isAuthenticated && !isLoading) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <AuthModal mode="signin">
+            <SidebarMenuButton size="sm" tooltip="Sign In">
+              <LogIn className="h-4 w-4" />
+              <span className="truncate font-medium group-data-[collapsible=icon]:hidden">Sign In</span>
+            </SidebarMenuButton>
+          </AuthModal>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <AuthModal mode="signup">
+            <SidebarMenuButton size="sm" tooltip="Sign Up">
+              <UserPlus className="h-4 w-4" />
+              <span className="truncate font-medium group-data-[collapsible=icon]:hidden">Sign Up</span>
+            </SidebarMenuButton>
+          </AuthModal>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="sm" disabled tooltip="Loading...">
+            <User className="h-4 w-4" />
+            <span className="truncate font-medium group-data-[collapsible=icon]:hidden">Loading...</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
+  }
 
   return (
     <SidebarMenu>
@@ -49,16 +99,17 @@ export function NavUser({
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              tooltip={user.name}
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback className="rounded-lg">CN</AvatarFallback>
               </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                 <span className="truncate font-medium">{user.name}</span>
                 <span className="truncate text-xs">{user.email}</span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -84,6 +135,13 @@ export function NavUser({
               <DropdownMenuItem>
                 <Sparkles />
                 Upgrade to Pro
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => signOut()}>
+                <LogOut />
+                Sign Out
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
