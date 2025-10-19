@@ -26,26 +26,47 @@ export function SkillsSection({
     {
       title: t.skills.languages,
       description: portfolioData.skills.languages.join(" • "),
+      seoDescription: "Expert in Java, TypeScript, JavaScript, Python, and PHP programming languages for enterprise-grade software development and web applications."
+    },
+    {
+      title: "Frameworks",
+      description: portfolioData.skills.frameworks.join(" • "),
+      seoDescription: "Proficient in Spring Boot, Hibernate, Angular, React, Next.js, Node.js, and Laravel for building scalable full-stack applications."
     },
     {
       title: t.skills.cloud,
       description: portfolioData.skills.cloud.join(" • "),
+      seoDescription: "Cloud architecture expertise in AWS, GCP, Docker, Vercel, Coolify, GitHub Actions, and Terraform for DevOps and infrastructure management."
     },
     {
-      title: t.skills.tools,
-      description: portfolioData.skills.tools.join(" • "),
+      title: "Databases",
+      description: portfolioData.skills.databases.join(" • "),
+      seoDescription: "Database design and optimization with PostgreSQL, MySQL, MongoDB, and Supabase for high-performance data management and analytics."
     },
     {
-      title: t.skills.networking,
-      description: portfolioData.skills.networking.join(" • "),
+      title: "Protocols",
+      description: portfolioData.skills.protocols.join(" • "),
+      seoDescription: "API development and integration using REST, JSON, JWT, OAuth2, WebSocket, gRPC, and GraphQL for modern web services."
+    },
+    {
+      title: "Security",
+      description: portfolioData.skills.security.join(" • "),
+      seoDescription: "Cybersecurity implementation following OWASP Top-10, SSL/TLS, network hardening, and anti-fraud ML for secure applications."
     },
     {
       title: t.skills.methodologies,
       description: portfolioData.skills.methodologies.join(" • "),
+      seoDescription: "Agile development practices, Scrum methodology, and CI/CD pipeline implementation for efficient software delivery."
+    },
+    {
+      title: "AI & Machine Learning",
+      description: portfolioData.skills.ai.join(" • "),
+      seoDescription: "AI integration expertise with OpenAI API, Deepseek, Mistral AI, machine learning, and automation for intelligent applications."
     },
     {
       title: t.skills.soft,
       description: portfolioData.skills.soft.join(" • "),
+      seoDescription: "Strategic thinking, analytical problem-solving, team collaboration, and bilingual communication for effective project leadership."
     },
   ];
 

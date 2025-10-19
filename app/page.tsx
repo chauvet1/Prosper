@@ -1,5 +1,8 @@
 "use client"
 
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useUserRole } from "@/hooks/use-user-role"
 import { AppSidebar } from "@/components/app-sidebar"
 import {
   Breadcrumb,
@@ -19,13 +22,47 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 import { PortfolioContent } from "@/components/portfolio-content"
 import { AIAssistant } from "@/components/ui/ai-assistant"
-import SmartRecommendations from "@/components/ui/smart-recommendations"
 import { useTranslations } from "@/hooks/use-translations"
-import { useSmartRecommendations } from "@/hooks/use-behavior-tracking"
 
 export default function Home() {
   const { locale } = useTranslations()
-  const { recommendationProps } = useSmartRecommendations('home', locale)
+  const { isAuthenticated, isLoading, role } = useUserRole()
+  const router = useRouter()
+
+  // Redirect authenticated users to their appropriate dashboard
+  useEffect(() => {
+    console.log('Landing page redirect check:', { isAuthenticated, isLoading, role });
+    if (!isLoading && isAuthenticated) {
+      if (role === 'admin') {
+        console.log('Redirecting admin to /admin');
+        router.push('/admin')
+      } else if (role === 'client') {
+        console.log('Redirecting client to /dashboard');
+        router.push('/dashboard')
+      } else {
+        console.log('User authenticated but no role determined, staying on landing page');
+      }
+    }
+  }, [isAuthenticated, isLoading, role, router])
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-2 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show nothing if authenticated (will redirect)
+  if (isAuthenticated) {
+    return null
+  }
+
+  // Show landing page for unauthenticated users
   return (
     <div className="h-screen overflow-hidden">
       <SidebarProvider defaultOpen={false}>
@@ -52,23 +89,14 @@ export default function Home() {
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
-            <div className="flex items-center gap-2 px-4">
-              <LanguageToggle />
-              <ThemeToggle />
-            </div>
+                <div className="flex items-center gap-2 px-4">
+                  <LanguageToggle />
+                  <ThemeToggle />
+                </div>
           </header>
           <main className="flex-1 overflow-y-auto overflow-x-hidden scroll-smooth">
             <div className="h-full p-4 pb-8">
               <PortfolioContent />
-
-              {/* Smart Recommendations */}
-              <div className="mt-12">
-                <SmartRecommendations
-                  {...recommendationProps}
-                  limit={4}
-                  className="max-w-6xl mx-auto"
-                />
-              </div>
             </div>
           </main>
         </SidebarInset>

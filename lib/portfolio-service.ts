@@ -1,7 +1,9 @@
-import { PrismaClient } from '@prisma/client'
 import { withCache, CACHE_KEYS, CACHE_TTL, invalidatePortfolioCache } from './cache'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '../convex/_generated/api'
 
-const prisma = new PrismaClient()
+// Initialize Convex client
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
 
 export class PortfolioService {
   // Personal Info
@@ -10,10 +12,7 @@ export class PortfolioService {
       CACHE_KEYS.PORTFOLIO_PERSONAL,
       async () => {
         try {
-          const personalInfo = await prisma.personalInfo.findFirst({
-            where: { active: true },
-            orderBy: { updatedAt: 'desc' }
-          })
+          const personalInfo = await convex.query(api.portfolio.getPersonalInfo, {})
           return personalInfo
         } catch (error) {
           console.error('Error fetching personal info:', error)
@@ -26,27 +25,7 @@ export class PortfolioService {
 
   static async updatePersonalInfo(data: any) {
     try {
-      const existing = await prisma.personalInfo.findFirst({
-        where: { active: true }
-      })
-
-      let result
-      if (existing) {
-        result = await prisma.personalInfo.update({
-          where: { id: existing.id },
-          data: {
-            ...data,
-            updatedAt: new Date()
-          }
-        })
-      } else {
-        result = await prisma.personalInfo.create({
-          data: {
-            ...data,
-            active: true
-          }
-        })
-      }
+      const result = await convex.mutation(api.portfolio.updatePersonalInfo, data)
 
       // Invalidate cache after update
       invalidatePortfolioCache()
@@ -61,19 +40,7 @@ export class PortfolioService {
   // Skills
   static async getSkills(category?: string) {
     try {
-      const where: any = { active: true }
-      if (category) {
-        where.category = category
-      }
-
-      const skills = await prisma.skill.findMany({
-        where,
-        orderBy: [
-          { featured: 'desc' },
-          { sortOrder: 'asc' },
-          { name: 'asc' }
-        ]
-      })
+      const skills = await convex.query(api.portfolio.getSkills, { category })
       return skills
     } catch (error) {
       console.error('Error fetching skills:', error)
@@ -83,26 +50,8 @@ export class PortfolioService {
 
   static async getSkillsByCategory() {
     try {
-      const skills = await prisma.skill.findMany({
-        where: { active: true },
-        orderBy: [
-          { category: 'asc' },
-          { featured: 'desc' },
-          { sortOrder: 'asc' }
-        ]
-      })
-
-      // Group by category
-      const grouped = skills.reduce((acc, skill) => {
-        const category = skill.category
-        if (!acc[category]) {
-          acc[category] = []
-        }
-        acc[category].push(skill)
-        return acc
-      }, {} as Record<string, typeof skills>)
-
-      return grouped
+      const skills = await convex.query(api.portfolio.getSkillsByCategory, {})
+      return skills
     } catch (error) {
       console.error('Error fetching skills by category:', error)
       return {}
@@ -112,13 +61,7 @@ export class PortfolioService {
   // Experience
   static async getExperiences() {
     try {
-      const experiences = await prisma.experience.findMany({
-        where: { active: true },
-        orderBy: [
-          { current: 'desc' },
-          { startDate: 'desc' }
-        ]
-      })
+      const experiences = await convex.query(api.portfolio.getExperiences, {})
       return experiences
     } catch (error) {
       console.error('Error fetching experiences:', error)
@@ -129,19 +72,7 @@ export class PortfolioService {
   // Projects
   static async getProjects(featured?: boolean) {
     try {
-      const where: any = { active: true }
-      if (featured !== undefined) {
-        where.featured = featured
-      }
-
-      const projects = await prisma.project.findMany({
-        where,
-        orderBy: [
-          { featured: 'desc' },
-          { sortOrder: 'asc' },
-          { createdAt: 'desc' }
-        ]
-      })
+      const projects = await convex.query(api.portfolio.getProjects, { featured })
       return projects
     } catch (error) {
       console.error('Error fetching projects:', error)
@@ -151,18 +82,7 @@ export class PortfolioService {
 
   static async getProjectBySlug(slug: string) {
     try {
-      const project = await prisma.project.findUnique({
-        where: { slug, active: true }
-      })
-
-      if (project) {
-        // Increment view count
-        await prisma.project.update({
-          where: { id: project.id },
-          data: { viewCount: { increment: 1 } }
-        })
-      }
-
+      const project = await convex.query(api.portfolio.getProjectBySlug, { slug })
       return project
     } catch (error) {
       console.error('Error fetching project by slug:', error)
@@ -173,13 +93,7 @@ export class PortfolioService {
   // Education
   static async getEducation() {
     try {
-      const education = await prisma.education.findMany({
-        where: { active: true },
-        orderBy: [
-          { current: 'desc' },
-          { startDate: 'desc' }
-        ]
-      })
+      const education = await convex.query(api.portfolio.getEducation, {})
       return education
     } catch (error) {
       console.error('Error fetching education:', error)
@@ -190,13 +104,7 @@ export class PortfolioService {
   // Certificates
   static async getCertificates() {
     try {
-      const certificates = await prisma.certificate.findMany({
-        where: { active: true },
-        orderBy: [
-          { featured: 'desc' },
-          { issueDate: 'desc' }
-        ]
-      })
+      const certificates = await convex.query(api.portfolio.getCertificates, {})
       return certificates
     } catch (error) {
       console.error('Error fetching certificates:', error)
@@ -240,30 +148,8 @@ export class PortfolioService {
   // Analytics
   static async getPortfolioAnalytics() {
     try {
-      const [
-        totalProjects,
-        featuredProjects,
-        totalViews,
-        totalSkills,
-        activeExperiences
-      ] = await Promise.all([
-        prisma.project.count({ where: { active: true } }),
-        prisma.project.count({ where: { active: true, featured: true } }),
-        prisma.project.aggregate({
-          where: { active: true },
-          _sum: { viewCount: true }
-        }),
-        prisma.skill.count({ where: { active: true } }),
-        prisma.experience.count({ where: { active: true } })
-      ])
-
-      return {
-        totalProjects,
-        featuredProjects,
-        totalViews: totalViews._sum.viewCount || 0,
-        totalSkills,
-        activeExperiences
-      }
+      const analytics = await convex.query(api.portfolio.getPortfolioAnalytics, {})
+      return analytics
     } catch (error) {
       console.error('Error fetching portfolio analytics:', error)
       return {

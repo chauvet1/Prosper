@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 import { StructuredData } from "@/components/structured-data";
-import { ConvexProvider } from "convex/react";
-import convex from "@/lib/convex";
+import { Providers } from "@/components/providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,24 +15,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mouil Prosper Merimee - Full Stack Developer | Portfolio",
-  description: "Full Stack Developer with 4+ years experience in JavaScript, React.js, Next.js, Node.js, PHP. Specializing in scalable web applications and AI integration.",
-  keywords: ["Full Stack Developer", "JavaScript", "React.js", "Next.js", "Node.js", "PHP", "Web Development", "Cameroon", "Yaoundé"],
+  title: "Mouil Prosper - Full-Stack Engineer | Java, Spring Boot, React, AWS Expert",
+  description: "4+ years building secure, cloud-native SaaS. Expert in Java 17, Spring Boot, Angular, React, TypeScript, AWS, GCP, Docker, CI/CD. Built crypto gateway ($2M monthly, <0.2% fraud). Lead 4-engineer Agile squad.",
+  keywords: ["Full-Stack Engineer", "Java Developer", "Spring Boot", "Angular", "React", "TypeScript", "AWS", "GCP", "Docker", "CI/CD", "PostgreSQL", "Microservices", "SaaS", "Crypto Gateway", "Stevo Digital", "Micro QQ Tech", "Cameroon Developer"],
   authors: [{ name: "Mouil Prosper" }],
   creator: "Mouil Prosper",
   publisher: "Mouil Prosper",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://pepis.pro/",
-    title: "Mouil Prosper - Full Stack Developer",
-    description: "Full Stack Developer specializing in modern web technologies and AI integration",
+    url: "https://pepis.world/",
+    title: "Mouil Prosper - Full-Stack Engineer | Java, Spring Boot, React Expert",
+    description: "4+ years building secure, cloud-native SaaS. Expert in Java 17, Spring Boot, Angular, React, TypeScript, AWS, GCP, Docker, CI/CD. Built crypto gateway ($2M monthly, <0.2% fraud).",
     siteName: "Mouil Prosper Portfolio",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mouil Prosper  - Full Stack Developer",
-    description: "Full Stack Developer specializing in modern web technologies and AI integration",
+    title: "Mouil Prosper - Full-Stack Engineer | Java, Spring Boot, React Expert",
+    description: "4+ years building secure, cloud-native SaaS. Expert in Java 17, Spring Boot, Angular, React, TypeScript, AWS, GCP, Docker, CI/CD.",
   },
   robots: {
     index: true,
@@ -58,18 +56,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
-        <ConvexProvider client={convex}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <StructuredData />
-            {children}
-          </ThemeProvider>
-        </ConvexProvider>
+            <Providers>
+              <StructuredData />
+              {children}
+            </Providers>
       </body>
     </html>
   );

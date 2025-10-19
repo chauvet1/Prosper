@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# Real Data Implementation Checker
+# This script verifies that all implementations use real data
+
+echo "🔍 Checking for Real Data Implementation Compliance"
+echo "=================================================="
+
+# Check for mock data patterns
+echo "📋 Checking for mock data patterns..."
+
+# Check for common mock data indicators
+MOCK_PATTERNS=(
+    "mock"
+    "sample"
+    "placeholder"
+    "lorem ipsum"
+    "test data"
+    "fake"
+    "dummy"
+    "example"
+    "demo"
+)
+
+VIOLATIONS=0
+
+for pattern in "${MOCK_PATTERNS[@]}"; do
+    echo "  Checking for: $pattern"
+    FOUND=$(grep -r -i "$pattern" --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" lib/ app/ scripts/ | grep -v "//" | grep -v "/*" | grep -v "*/" | wc -l)
+    if [ "$FOUND" -gt 0 ]; then
+        echo "    ⚠️  Found $FOUND instances of '$pattern'"
+        VIOLATIONS=$((VIOLATIONS + 1))
+    else
+        echo "    ✅ No instances found"
+    fi
+done
+
+# Check for hardcoded data
+echo ""
+echo "📋 Checking for hardcoded data..."
+
+HARDCODED_PATTERNS=(
+    "const.*=.*\[.*\]"
+    "const.*=.*\{.*\}"
+    "return.*\[.*\]"
+    "return.*\{.*\}"
+)
+
+for pattern in "${HARDCODED_PATTERNS[@]}"; do
+    echo "  Checking for: $pattern"
+    FOUND=$(grep -r -E "$pattern" --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" lib/ app/ | grep -v "//" | grep -v "/*" | grep -v "*/" | wc -l)
+    if [ "$FOUND" -gt 0 ]; then
+        echo "    ⚠️  Found $FOUND potential hardcoded data instances"
+        VIOLATIONS=$((VIOLATIONS + 1))
+    else
+        echo "    ✅ No hardcoded data found"
+    fi
+done
+
+# Check for real data usage
+echo ""
+echo "📋 Checking for real data usage..."
+
+REAL_DATA_PATTERNS=(
+    "convex.query"
+    "convex.mutation"
+    "fetch("
+    "await.*api"
+    "real.*data"
+    "actual.*data"
+)
+
+for pattern in "${REAL_DATA_PATTERNS[@]}"; do
+    echo "  Checking for: $pattern"
+    FOUND=$(grep -r -i "$pattern" --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" lib/ app/ | wc -l)
+    if [ "$FOUND" -gt 0 ]; then
+        echo "    ✅ Found $FOUND instances of real data usage"
+    else
+        echo "    ⚠️  No instances found"
+    fi
+done
+
+# Summary
+echo ""
+echo "📊 Summary"
+echo "=========="
+
+if [ "$VIOLATIONS" -eq 0 ]; then
+    echo "✅ All checks passed! Real data implementation is compliant."
+    exit 0
+else
+    echo "❌ Found $VIOLATIONS potential violations of real data policy."
+    echo "Please review and fix these issues before proceeding."
+    exit 1
+fi

@@ -11,11 +11,14 @@ import { ProjectsEvervaultCards } from "@/components/projects-evervault-cards"
 import { ExperienceEvervaultCards } from "@/components/experience-evervault-cards"
 import { AboutMeSpotlight } from "@/components/about-me-spotlight"
 import { PortfolioFooter } from "@/components/portfolio-footer"
+import SmartRecommendations from "@/components/ui/smart-recommendations"
+import { useSmartRecommendations } from "@/hooks/use-behavior-tracking"
 import { Mail, Phone, ExternalLink, Calendar, Clock } from "lucide-react"
 
 export function PortfolioContent() {
   const { t, locale } = useTranslations()
   const { posts: recentPosts, loading, error } = useRecentPosts(3)
+  const { recommendationProps } = useSmartRecommendations('home', locale)
 
   return (
     <div className="flex flex-1 flex-col gap-8 p-6 pt-0">
@@ -52,6 +55,15 @@ export function PortfolioContent() {
         </div>
         <ProjectsEvervaultCards />
       </section>
+
+      {/* Smart Recommendations */}
+      <div className="mt-8">
+        <SmartRecommendations
+          {...recommendationProps}
+          limit={4}
+          className="max-w-6xl mx-auto"
+        />
+      </div>
 
       {/* Blog Section */}
       <section id="blog" className="space-y-6">
@@ -103,8 +115,8 @@ export function PortfolioContent() {
             recentPosts.map((post, index) => (
             <Card key={index}>
               <CardHeader>
-                <CardTitle className="text-lg">{post.title[locale]}</CardTitle>
-                <CardDescription>{post.excerpt[locale]}</CardDescription>
+                <CardTitle className="text-lg">{post.title?.[locale] || post.title || 'Untitled'}</CardTitle>
+                <CardDescription>{post.excerpt?.[locale] || post.excerpt || 'No description available'}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-wrap gap-2">

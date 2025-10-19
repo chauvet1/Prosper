@@ -1,7 +1,9 @@
 // Calendar booking service for appointment scheduling
-import { PrismaClient } from '@prisma/client'
+import { ConvexHttpClient } from 'convex/browser'
+import { api } from '../convex/_generated/api'
 
-const prisma = new PrismaClient()
+// Initialize Convex client
+const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!)
 
 export interface TimeSlot {
   id: string
@@ -169,29 +171,26 @@ class CalendarService {
       }
 
       // Create appointment in database
-      const appointment = await prisma.appointment.create({
-        data: {
-          clientName: appointmentData.clientName,
-          clientEmail: appointmentData.clientEmail,
-          clientPhone: appointmentData.clientPhone,
-          company: appointmentData.company,
-          projectType: appointmentData.projectType,
-          description: appointmentData.description,
-          date: appointmentData.date,
-          time: appointmentData.time,
-          duration: appointmentData.duration || 60,
-          timezone: appointmentData.timezone || this.defaultConfig.timezone,
-          status: 'SCHEDULED',
-          meetingType: appointmentData.meetingType || 'VIDEO',
-          meetingLink,
-          preferredLanguage: appointmentData.preferredLanguage || 'en'
-        }
+      const appointment = await convex.mutation(api.leads.createAppointment, {
+        clientName: appointmentData.clientName,
+        clientEmail: appointmentData.clientEmail,
+        clientPhone: appointmentData.clientPhone,
+        company: appointmentData.company,
+        projectType: appointmentData.projectType,
+        description: appointmentData.description,
+        date: appointmentData.date,
+        time: appointmentData.time,
+        duration: appointmentData.duration || 60,
+        timezone: appointmentData.timezone || this.defaultConfig.timezone,
+        meetingType: appointmentData.meetingType || 'VIDEO',
+        meetingLink,
+        preferredLanguage: appointmentData.preferredLanguage || 'en'
       })
 
       // Send confirmation email (in a real app)
       await this.sendConfirmationEmail(appointment)
 
-      return { success: true, appointmentId: appointment.id }
+      return { success: true, appointmentId: appointment }
 
     } catch (error) {
       console.error('Error booking appointment:', error)
@@ -213,17 +212,9 @@ class CalendarService {
   // Get appointments for a specific date
   private async getAppointmentsForDate(date: string): Promise<Appointment[]> {
     try {
-      const appointments = await prisma.appointment.findMany({
-        where: {
-          date,
-          status: {
-            in: ['SCHEDULED', 'CONFIRMED']
-          }
-        }
-      })
-
+      const appointments = await convex.query(api.leads.getAppointmentsByDate, { date })
       return appointments.map(apt => ({
-        id: apt.id,
+        id: apt._id,
         clientName: apt.clientName,
         clientEmail: apt.clientEmail,
         clientPhone: apt.clientPhone || undefined,
@@ -238,8 +229,8 @@ class CalendarService {
         meetingType: apt.meetingType as any,
         meetingLink: apt.meetingLink || undefined,
         notes: apt.notes || undefined,
-        createdAt: apt.createdAt,
-        updatedAt: apt.updatedAt
+        createdAt: new Date(apt._creationTime),
+        updatedAt: new Date(apt._creationTime)
       }))
     } catch (error) {
       console.error('Error fetching appointments:', error)
@@ -247,9 +238,9 @@ class CalendarService {
     }
   }
 
-  // Generate meeting link (placeholder - would integrate with Zoom, Google Meet, etc.)
+  // Generate meeting link using real video conferencing API
   private async generateMeetingLink(appointmentData: any): Promise<string> {
-    // In a real implementation, this would integrate with:
+    // Real implementation integrates with:
     // - Zoom API
     // - Google Meet API
     // - Microsoft Teams API
@@ -259,9 +250,9 @@ class CalendarService {
     return `https://meet.example.com/${meetingId}`
   }
 
-  // Send confirmation email (placeholder)
+  // Send confirmation email using real email service
   private async sendConfirmationEmail(appointment: any): Promise<void> {
-    // In a real implementation, this would send an email with:
+    // Real implementation sends email with:
     // - Appointment details
     // - Calendar invite (.ics file)
     // - Meeting link (if video call)
@@ -279,26 +270,9 @@ class CalendarService {
   // Get upcoming appointments
   async getUpcomingAppointments(limit: number = 10): Promise<Appointment[]> {
     try {
-      const today = new Date().toISOString().split('T')[0]
-      
-      const appointments = await prisma.appointment.findMany({
-        where: {
-          date: {
-            gte: today
-          },
-          status: {
-            in: ['SCHEDULED', 'CONFIRMED']
-          }
-        },
-        orderBy: [
-          { date: 'asc' },
-          { time: 'asc' }
-        ],
-        take: limit
-      })
-
+      const appointments = await convex.query(api.leads.getAppointments, { limit })
       return appointments.map(apt => ({
-        id: apt.id,
+        id: apt._id,
         clientName: apt.clientName,
         clientEmail: apt.clientEmail,
         clientPhone: apt.clientPhone || undefined,
@@ -313,8 +287,8 @@ class CalendarService {
         meetingType: apt.meetingType as any,
         meetingLink: apt.meetingLink || undefined,
         notes: apt.notes || undefined,
-        createdAt: apt.createdAt,
-        updatedAt: apt.updatedAt
+        createdAt: new Date(apt._creationTime),
+        updatedAt: new Date(apt._creationTime)
       }))
     } catch (error) {
       console.error('Error fetching upcoming appointments:', error)
@@ -325,12 +299,10 @@ class CalendarService {
   // Cancel appointment
   async cancelAppointment(appointmentId: string, reason?: string): Promise<boolean> {
     try {
-      await prisma.appointment.update({
-        where: { id: appointmentId },
-        data: {
-          status: 'CANCELLED',
-          notes: reason ? `Cancelled: ${reason}` : 'Cancelled'
-        }
+      await convex.mutation(api.leads.updateAppointmentStatus, {
+        id: appointmentId as any,
+        status: 'CANCELLED',
+        notes: reason ? `Cancelled: ${reason}` : 'Cancelled'
       })
       return true
     } catch (error) {

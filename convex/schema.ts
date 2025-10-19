@@ -88,6 +88,168 @@ const MeetingType = v.union(
   v.literal("IN_PERSON")
 );
 
+// AI System Enums
+const AIModelProvider = v.union(
+  v.literal("gemini"),
+  v.literal("openai"),
+  v.literal("anthropic"),
+  v.literal("local")
+);
+
+const AIModelStatus = v.union(
+  v.literal("active"),
+  v.literal("inactive"),
+  v.literal("quota_exhausted"),
+  v.literal("error"),
+  v.literal("maintenance")
+);
+
+const ContentQualityStatus = v.union(
+  v.literal("pending"),
+  v.literal("approved"),
+  v.literal("rejected"),
+  v.literal("needs_review")
+);
+
+const SentimentType = v.union(
+  v.literal("positive"),
+  v.literal("negative"),
+  v.literal("neutral"),
+  v.literal("mixed")
+);
+
+const IntentType = v.union(
+  v.literal("information"),
+  v.literal("purchase"),
+  v.literal("support"),
+  v.literal("feedback"),
+  v.literal("other")
+);
+
+const EntityType = v.union(
+  v.literal("PERSON"),
+  v.literal("ORGANIZATION"),
+  v.literal("LOCATION"),
+  v.literal("DATE"),
+  v.literal("TIME"),
+  v.literal("MONEY"),
+  v.literal("PERCENT"),
+  v.literal("PRODUCT"),
+  v.literal("EVENT"),
+  v.literal("SKILL"),
+  v.literal("TECHNOLOGY"),
+  v.literal("CUSTOM")
+);
+
+const ImageAnalysisType = v.union(
+  v.literal("objects"),
+  v.literal("text"),
+  v.literal("faces"),
+  v.literal("scene"),
+  v.literal("colors"),
+  v.literal("brands"),
+  v.literal("quality"),
+  v.literal("metadata")
+);
+
+const MarketTrendImpact = v.union(
+  v.literal("low"),
+  v.literal("medium"),
+  v.literal("high"),
+  v.literal("critical")
+);
+
+const MarketTrendTimeframe = v.union(
+  v.literal("short"),
+  v.literal("medium"),
+  v.literal("long")
+);
+
+const CustomerSegmentType = v.union(
+  v.literal("demographic"),
+  v.literal("behavioral"),
+  v.literal("psychographic"),
+  v.literal("geographic"),
+  v.literal("value_based")
+);
+
+const RevenueOptimizationType = v.union(
+  v.literal("pricing"),
+  v.literal("conversion"),
+  v.literal("forecast"),
+  v.literal("margin"),
+  v.literal("comprehensive")
+);
+
+const EmailCampaignType = v.union(
+  v.literal("newsletter"),
+  v.literal("promotional"),
+  v.literal("transactional"),
+  v.literal("welcome"),
+  v.literal("abandoned_cart"),
+  v.literal("re_engagement")
+);
+
+const EmailCampaignStatus = v.union(
+  v.literal("draft"),
+  v.literal("scheduled"),
+  v.literal("sending"),
+  v.literal("sent"),
+  v.literal("paused"),
+  v.literal("cancelled"),
+  v.literal("failed")
+);
+
+const SocialMediaPlatform = v.union(
+  v.literal("facebook"),
+  v.literal("twitter"),
+  v.literal("instagram"),
+  v.literal("linkedin"),
+  v.literal("youtube"),
+  v.literal("tiktok"),
+  v.literal("pinterest")
+);
+
+const SocialMediaPostStatus = v.union(
+  v.literal("draft"),
+  v.literal("scheduled"),
+  v.literal("published"),
+  v.literal("failed"),
+  v.literal("deleted")
+);
+
+const CRMTaskStatus = v.union(
+  v.literal("pending"),
+  v.literal("in_progress"),
+  v.literal("completed"),
+  v.literal("cancelled"),
+  v.literal("overdue")
+);
+
+const CRMTaskPriority = v.union(
+  v.literal("low"),
+  v.literal("medium"),
+  v.literal("high"),
+  v.literal("urgent")
+);
+
+const CRMDealStatus = v.union(
+  v.literal("prospecting"),
+  v.literal("qualification"),
+  v.literal("proposal"),
+  v.literal("negotiation"),
+  v.literal("closed_won"),
+  v.literal("closed_lost")
+);
+
+const CRMPipelineStage = v.union(
+  v.literal("lead"),
+  v.literal("qualified"),
+  v.literal("proposal"),
+  v.literal("negotiation"),
+  v.literal("closed")
+);
+
 export default defineSchema({
   // Blog System
   blogPosts: defineTable({
@@ -255,22 +417,6 @@ export default defineSchema({
     unsubscribedAt: v.optional(v.number()),
   }).index("by_email", ["email"]),
 
-  emailCampaigns: defineTable({
-    name: v.string(),
-    subjectEn: v.optional(v.string()),
-    subjectFr: v.optional(v.string()),
-    contentEn: v.optional(v.string()),
-    contentFr: v.optional(v.string()),
-    postId: v.optional(v.id("blogPosts")),
-    scheduledFor: v.optional(v.number()),
-    sentAt: v.optional(v.number()),
-    targetLanguage: v.optional(v.string()),
-    targetCategories: v.array(v.string()),
-    recipientsCount: v.number(),
-    openedCount: v.number(),
-    clickedCount: v.number(),
-    status: CampaignStatus,
-  }).index("by_status", ["status"]),
 
   // Portfolio System
   personalInfo: defineTable({
@@ -435,4 +581,641 @@ export default defineSchema({
     .index("by_email", ["clientEmail"])
     .index("by_status", ["status"])
     .index("by_date", ["date"]),
+
+  // AI System Tables
+  aiModels: defineTable({
+    id: v.string(),
+    name: v.string(),
+    provider: AIModelProvider,
+    model: v.string(),
+    apiKey: v.optional(v.string()),
+    endpoint: v.optional(v.string()),
+    maxTokens: v.number(),
+    costPerToken: v.number(),
+    quotaLimit: v.number(),
+    quotaUsed: v.number(),
+    quotaResetTime: v.number(),
+    priority: v.number(),
+    isAvailable: v.boolean(),
+    status: AIModelStatus,
+    lastError: v.optional(v.string()),
+    quotaPercentage: v.number(),
+    quotaWarningThreshold: v.number(),
+    quotaCriticalThreshold: v.number(),
+    lastQuotaCheck: v.number(),
+  })
+    .index("by_provider", ["provider"])
+    .index("by_status", ["status"])
+    .index("by_priority", ["priority"]),
+
+  contentQualityAssessments: defineTable({
+    contentId: v.string(),
+    contentType: v.string(),
+    qualityScore: v.number(),
+    grammarScore: v.number(),
+    readabilityScore: v.number(),
+    seoScore: v.number(),
+    technicalAccuracyScore: v.number(),
+    brandVoiceScore: v.number(),
+    status: ContentQualityStatus,
+    issues: v.array(v.string()),
+    recommendations: v.array(v.string()),
+    assessedAt: v.number(),
+    assessedBy: v.optional(v.string()),
+  })
+    .index("by_content", ["contentId"])
+    .index("by_status", ["status"])
+    .index("by_score", ["qualityScore"]),
+
+  contentModerationResults: defineTable({
+    contentId: v.string(),
+    contentType: v.string(),
+    isAppropriate: v.boolean(),
+    toxicityScore: v.number(),
+    biasScore: v.number(),
+    spamScore: v.number(),
+    brandSafetyScore: v.number(),
+    flaggedIssues: v.array(v.string()),
+    moderationActions: v.array(v.string()),
+    moderatedAt: v.number(),
+    moderatedBy: v.optional(v.string()),
+  })
+    .index("by_content", ["contentId"])
+    .index("by_appropriate", ["isAppropriate"])
+    .index("by_toxicity", ["toxicityScore"]),
+
+  factCheckResults: defineTable({
+    contentId: v.string(),
+    claim: v.string(),
+    isVerified: v.boolean(),
+    confidence: v.number(),
+    sources: v.array(v.string()),
+    verificationMethod: v.string(),
+    checkedAt: v.number(),
+    checkedBy: v.optional(v.string()),
+  })
+    .index("by_content", ["contentId"])
+    .index("by_verified", ["isVerified"])
+    .index("by_confidence", ["confidence"]),
+
+  // Natural Language Understanding
+  intentClassifications: defineTable({
+    text: v.string(),
+    userId: v.optional(v.string()),
+    intents: v.array(v.any()),
+    primaryIntent: v.any(),
+    secondaryIntents: v.array(v.any()),
+    context: v.any(),
+    confidence: v.number(),
+    classifiedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_confidence", ["confidence"])
+    .index("by_date", ["classifiedAt"]),
+
+  entityExtractions: defineTable({
+    text: v.string(),
+    userId: v.optional(v.string()),
+    entities: v.array(v.any()),
+    relations: v.array(v.any()),
+    coreferences: v.array(v.any()),
+    extractedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_date", ["extractedAt"]),
+
+  sentimentAnalyses: defineTable({
+    text: v.string(),
+    userId: v.optional(v.string()),
+    sentiment: v.any(),
+    aspects: v.array(v.any()),
+    intensity: v.any(),
+    language: v.any(),
+    analyzedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_sentiment", ["sentiment"])
+    .index("by_date", ["analyzedAt"]),
+
+  // Computer Vision
+  imageAnalyses: defineTable({
+    imageUrl: v.string(),
+    analysis: v.any(),
+    objects: v.array(v.any()),
+    text: v.array(v.any()),
+    faces: v.array(v.any()),
+    scene: v.any(),
+    colors: v.array(v.any()),
+    brands: v.array(v.any()),
+    quality: v.any(),
+    metadata: v.any(),
+    analyzedAt: v.number(),
+  })
+    .index("by_image", ["imageUrl"])
+    .index("by_date", ["analyzedAt"]),
+
+  visualContentGenerations: defineTable({
+    prompt: v.string(),
+    generatedImages: v.array(v.any()),
+    variations: v.array(v.any()),
+    analysis: v.any(),
+    generatedAt: v.number(),
+  })
+    .index("by_date", ["generatedAt"]),
+
+  visualSearchResults: defineTable({
+    queryImage: v.string(),
+    results: v.array(v.any()),
+    suggestions: v.array(v.string()),
+    filters: v.any(),
+    searchedAt: v.number(),
+  })
+    .index("by_date", ["searchedAt"]),
+
+  // Market Intelligence
+  industryTrends: defineTable({
+    industry: v.string(),
+    trend: v.string(),
+    description: v.string(),
+    impact: MarketTrendImpact,
+    timeframe: MarketTrendTimeframe,
+    confidence: v.number(),
+    sources: v.array(v.string()),
+    metrics: v.any(),
+    implications: v.array(v.string()),
+    opportunities: v.array(v.string()),
+    threats: v.array(v.string()),
+    recommendations: v.array(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_industry", ["industry"])
+    .index("by_impact", ["impact"])
+    .index("by_timeframe", ["timeframe"]),
+
+  competitiveAnalyses: defineTable({
+    company: v.string(),
+    industry: v.string(),
+    analysis: v.any(),
+    financials: v.any(),
+    products: v.array(v.any()),
+    marketing: v.any(),
+    technology: v.any(),
+    recommendations: v.array(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_company", ["company"])
+    .index("by_industry", ["industry"])
+    .index("by_date", ["createdAt"]),
+
+  marketOpportunities: defineTable({
+    title: v.string(),
+    description: v.string(),
+    market: v.string(),
+    segment: v.string(),
+    size: v.any(),
+    growth: v.any(),
+    competition: v.any(),
+    customer: v.any(),
+    business: v.any(),
+    risks: v.any(),
+    recommendations: v.any(),
+    score: v.number(),
+    priority: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_market", ["market"])
+    .index("by_priority", ["priority"])
+    .index("by_score", ["score"]),
+
+  // Customer Insights
+  userBehaviorAnalyses: defineTable({
+    userId: v.string(),
+    analysis: v.any(),
+    insights: v.array(v.string()),
+    recommendations: v.array(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_date", ["createdAt"]),
+
+  customerJourneys: defineTable({
+    userId: v.string(),
+    journey: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_date", ["createdAt"]),
+
+  customerSegments: defineTable({
+    name: v.string(),
+    description: v.string(),
+    criteria: v.array(v.any()),
+    size: v.number(),
+    characteristics: v.any(),
+    value: v.any(),
+    engagement: v.any(),
+    opportunities: v.array(v.string()),
+    risks: v.array(v.string()),
+    strategies: v.array(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_size", ["size"])
+    .index("by_date", ["createdAt"]),
+
+  lifetimeValuePredictions: defineTable({
+    userId: v.string(),
+    prediction: v.any(),
+    recommendations: v.array(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_date", ["createdAt"]),
+
+  churnPredictions: defineTable({
+    userId: v.string(),
+    prediction: v.any(),
+    interventions: v.array(v.any()),
+    recommendations: v.array(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_date", ["createdAt"]),
+
+  // Revenue Optimization
+  pricingOptimizations: defineTable({
+    product: v.string(),
+    currentPrice: v.number(),
+    optimizedPrice: v.number(),
+    confidence: v.number(),
+    factors: v.array(v.any()),
+    elasticity: v.any(),
+    scenarios: v.array(v.any()),
+    competitive: v.any(),
+    customer: v.any(),
+    recommendations: v.array(v.string()),
+    risks: v.array(v.string()),
+    implementation: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_product", ["product"])
+    .index("by_confidence", ["confidence"])
+    .index("by_date", ["createdAt"]),
+
+  conversionOptimizations: defineTable({
+    funnel: v.string(),
+    currentRate: v.number(),
+    optimizedRate: v.number(),
+    improvement: v.number(),
+    factors: v.array(v.any()),
+    stages: v.array(v.any()),
+    experiments: v.array(v.any()),
+    personalization: v.any(),
+    technical: v.any(),
+    content: v.any(),
+    recommendations: v.array(v.string()),
+    risks: v.array(v.string()),
+    implementation: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_funnel", ["funnel"])
+    .index("by_improvement", ["improvement"])
+    .index("by_date", ["createdAt"]),
+
+  revenueForecasts: defineTable({
+    period: v.any(),
+    forecast: v.any(),
+    breakdown: v.any(),
+    drivers: v.array(v.any()),
+    scenarios: v.array(v.any()),
+    risks: v.array(v.any()),
+    opportunities: v.array(v.any()),
+    recommendations: v.array(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_date", ["createdAt"]),
+
+  profitMarginAnalyses: defineTable({
+    period: v.any(),
+    analysis: v.any(),
+    breakdown: v.any(),
+    costs: v.any(),
+    optimization: v.any(),
+    benchmarks: v.any(),
+    recommendations: v.array(v.string()),
+    risks: v.array(v.string()),
+    implementation: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_date", ["createdAt"]),
+
+  // Email Marketing System
+  emailMarketingCampaigns: defineTable({
+    name: v.string(),
+    subject: v.string(),
+    fromName: v.string(),
+    fromEmail: v.string(),
+    replyTo: v.optional(v.string()),
+    type: EmailCampaignType,
+    status: EmailCampaignStatus,
+    template: v.any(),
+    content: v.any(),
+    recipients: v.array(v.string()),
+    scheduledFor: v.optional(v.number()),
+    sentAt: v.optional(v.number()),
+    metrics: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_type", ["type"])
+    .index("by_date", ["createdAt"]),
+
+  emailLists: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    subscribers: v.array(v.string()),
+    tags: v.array(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_date", ["createdAt"]),
+
+  emailSubscribers: defineTable({
+    email: v.string(),
+    name: v.optional(v.string()),
+    status: v.string(),
+    tags: v.array(v.string()),
+    preferences: v.any(),
+    subscribedAt: v.number(),
+    lastActivity: v.optional(v.number()),
+  })
+    .index("by_email", ["email"])
+    .index("by_status", ["status"])
+    .index("by_date", ["subscribedAt"]),
+
+  emailAutomations: defineTable({
+    name: v.string(),
+    description: v.string(),
+    trigger: v.string(),
+    conditions: v.array(v.any()),
+    actions: v.array(v.any()),
+    status: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_status", ["status"])
+    .index("by_trigger", ["trigger"])
+    .index("by_date", ["createdAt"]),
+
+  emailTemplates: defineTable({
+    name: v.string(),
+    subject: v.string(),
+    html: v.string(),
+    text: v.optional(v.string()),
+    preview: v.optional(v.string()),
+    category: v.string(),
+    tags: v.array(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_category", ["category"])
+    .index("by_date", ["createdAt"]),
+
+  emailAnalytics: defineTable({
+    campaignId: v.optional(v.string()),
+    listId: v.optional(v.string()),
+    period: v.any(),
+    metrics: v.any(),
+    rates: v.any(),
+    trends: v.any(),
+    topLinks: v.any(),
+    topCountries: v.any(),
+    topDevices: v.any(),
+    insights: v.array(v.string()),
+    recommendations: v.array(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_campaign", ["campaignId"])
+    .index("by_list", ["listId"])
+    .index("by_date", ["createdAt"]),
+
+  // Social Media Automation
+  socialMediaAccounts: defineTable({
+    platform: SocialMediaPlatform,
+    username: v.string(),
+    accessToken: v.string(),
+    refreshToken: v.optional(v.string()),
+    isActive: v.boolean(),
+    lastSync: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_platform", ["platform"])
+    .index("by_username", ["username"])
+    .index("by_active", ["isActive"]),
+
+  socialMediaPosts: defineTable({
+    accountId: v.string(),
+    content: v.string(),
+    media: v.array(v.string()),
+    scheduledFor: v.optional(v.number()),
+    publishedAt: v.optional(v.number()),
+    status: SocialMediaPostStatus,
+    platform: SocialMediaPlatform,
+    engagement: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_account", ["accountId"])
+    .index("by_status", ["status"])
+    .index("by_platform", ["platform"])
+    .index("by_date", ["createdAt"]),
+
+  socialMediaCampaigns: defineTable({
+    name: v.string(),
+    description: v.string(),
+    platforms: v.array(SocialMediaPlatform),
+    posts: v.array(v.string()),
+    startDate: v.number(),
+    endDate: v.optional(v.number()),
+    budget: v.optional(v.number()),
+    status: v.string(),
+    metrics: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_status", ["status"])
+    .index("by_date", ["createdAt"]),
+
+  socialMediaAnalytics: defineTable({
+    accountId: v.string(),
+    period: v.any(),
+    metrics: v.any(),
+    engagement: v.any(),
+    reach: v.any(),
+    impressions: v.any(),
+    clicks: v.any(),
+    shares: v.any(),
+    comments: v.any(),
+    likes: v.any(),
+    createdAt: v.number(),
+  })
+    .index("by_account", ["accountId"])
+    .index("by_date", ["createdAt"]),
+
+  // Internal CRM
+  crmContacts: defineTable({
+    name: v.string(),
+    email: v.string(),
+    phone: v.optional(v.string()),
+    company: v.optional(v.string()),
+    title: v.optional(v.string()),
+    address: v.optional(v.string()),
+    tags: v.array(v.string()),
+    notes: v.optional(v.string()),
+    lastContact: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_company", ["company"])
+    .index("by_date", ["createdAt"]),
+
+  crmDeals: defineTable({
+    title: v.string(),
+    contactId: v.string(),
+    value: v.number(),
+    currency: v.string(),
+    status: CRMDealStatus,
+    stage: CRMPipelineStage,
+    probability: v.number(),
+    expectedCloseDate: v.optional(v.number()),
+    actualCloseDate: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_contact", ["contactId"])
+    .index("by_status", ["status"])
+    .index("by_stage", ["stage"])
+    .index("by_value", ["value"]),
+
+  crmTasks: defineTable({
+    title: v.string(),
+    description: v.optional(v.string()),
+    contactId: v.optional(v.string()),
+    dealId: v.optional(v.string()),
+    assignedTo: v.optional(v.string()),
+    dueDate: v.optional(v.number()),
+    status: CRMTaskStatus,
+    priority: CRMTaskPriority,
+    completedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_contact", ["contactId"])
+    .index("by_deal", ["dealId"])
+    .index("by_status", ["status"])
+    .index("by_priority", ["priority"])
+    .index("by_due_date", ["dueDate"]),
+
+  crmCommunications: defineTable({
+    contactId: v.string(),
+    type: v.string(),
+    subject: v.optional(v.string()),
+    content: v.string(),
+    direction: v.string(),
+    timestamp: v.number(),
+    relatedDealId: v.optional(v.string()),
+    relatedTaskId: v.optional(v.string()),
+  })
+    .index("by_contact", ["contactId"])
+    .index("by_type", ["type"])
+    .index("by_timestamp", ["timestamp"]),
+
+  crmPipelines: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    stages: v.array(v.any()),
+    isDefault: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_default", ["isDefault"])
+    .index("by_date", ["createdAt"]),
+
+  crmReports: defineTable({
+    name: v.string(),
+    type: v.string(),
+    parameters: v.any(),
+    data: v.any(),
+    generatedAt: v.number(),
+    generatedBy: v.optional(v.string()),
+  })
+    .index("by_name", ["name"])
+    .index("by_type", ["type"])
+    .index("by_date", ["generatedAt"]),
+
+  crmAutomations: defineTable({
+    name: v.string(),
+    description: v.string(),
+    trigger: v.string(),
+    conditions: v.array(v.any()),
+    actions: v.array(v.any()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_name", ["name"])
+    .index("by_active", ["isActive"])
+    .index("by_trigger", ["trigger"])
+    .index("by_date", ["createdAt"]),
+
+  crmBackups: defineTable({
+    type: v.string(),
+    data: v.any(),
+    size: v.number(),
+    createdAt: v.number(),
+    createdBy: v.optional(v.string()),
+  })
+    .index("by_type", ["type"])
+    .index("by_date", ["createdAt"]),
+
+  // User management for WorkOS AuthKit
+  users: defineTable({
+    workosId: v.optional(v.string()), // WorkOS user ID (optional for backward compatibility)
+    email: v.string(),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    profilePictureUrl: v.optional(v.union(v.string(), v.null())),
+    emailVerified: v.optional(v.boolean()),
+    createdAt: v.optional(v.number()),
+    lastLoginAt: v.optional(v.number()),
+    role: v.optional(v.string()), // 'admin' or 'client'
+    preferences: v.optional(v.object({
+      theme: v.optional(v.string()),
+      language: v.optional(v.string()),
+      notifications: v.optional(v.boolean()),
+    })),
+  })
+    .index("by_workos_id", ["workosId"])
+    .index("by_email", ["email"])
+    .index("by_role", ["role"]),
 });

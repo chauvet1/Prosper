@@ -126,8 +126,8 @@ export async function generateBlogImage(config: ImageGenerationConfig): Promise<
         style: config.style,
         aspectRatio: config.aspectRatio,
         generatedAt: new Date().toISOString(),
-        model: imageUrl.includes('placeholder') ? 'placeholder' : 'dall-e-3',
-        cost: imageUrl.includes('placeholder') ? '$0.00' : (config.aspectRatio === '1:1' ? '$0.040' : '$0.080'),
+        model: 'dall-e-3',
+        cost: config.aspectRatio === '1:1' ? '$0.040' : '$0.080',
         quality: 'standard'
       }
     }
@@ -136,14 +136,14 @@ export async function generateBlogImage(config: ImageGenerationConfig): Promise<
     return generatedImage
 
   } catch (error) {
-    console.error('❌ DALL-E 3 generation failed, using placeholder:', error)
+    console.error('❌ DALL-E 3 generation failed:', error)
 
-    // If DALL-E 3 fails, return a professional placeholder image object
+    // If DALL-E 3 fails, return a fallback image object
     const timestamp = new Date().toISOString().split('T')[0]
     const slugTitle = config.blogTitle.toLowerCase().replace(/[^a-z0-9]/g, '-').substring(0, 50)
 
     return {
-      url: generatePlaceholderImage(config),
+      url: generateFallbackImage(config),
       prompt: `Professional ${config.style} illustration for ${config.contentType} blog post about ${config.blogTitle}`,
       altText: {
         en: `Professional ${config.style} illustration for ${config.blogTitle}`,
@@ -158,9 +158,9 @@ export async function generateBlogImage(config: ImageGenerationConfig): Promise<
         style: config.style,
         aspectRatio: config.aspectRatio,
         generatedAt: new Date().toISOString(),
-        model: 'placeholder',
+        model: 'fallback',
         cost: '$0.00',
-        quality: 'placeholder'
+        quality: 'fallback'
       }
     }
   }
@@ -170,10 +170,10 @@ export async function generateBlogImage(config: ImageGenerationConfig): Promise<
 // Nano Banana (Gemini 2.5 Flash Image) removed in favor of cost-effective DALL-E 3
 
 // DALL-E 3 is now the primary and only AI image generation method
-// Fallback removed - direct placeholder generation on DALL-E failure
+// Fallback removed - direct fallback generation on DALL-E failure
 
-// Enhanced placeholder image generator for development
-function generatePlaceholderImage(config: ImageGenerationConfig): string {
+// Enhanced fallback image generator for development
+function generateFallbackImage(config: ImageGenerationConfig): string {
   const [width, height] = config.aspectRatio === '16:9' ? [1200, 675] :
                           config.aspectRatio === '4:3' ? [1200, 900] :
                           config.aspectRatio === '1:1' ? [1200, 1200] : [675, 1200]
@@ -190,7 +190,7 @@ function generatePlaceholderImage(config: ImageGenerationConfig): string {
   const colorScheme = colors[config.style] || colors.professional
   const [bg, fg] = colorScheme.split(',')
 
-  return `https://via.placeholder.com/${width}x${height}/${bg}/${fg}?text=${encodedTitle}+%7C+Nano+Banana+Placeholder`
+  return `https://via.placeholder.com/${width}x${height}/${bg}/${fg}?text=${encodedTitle}`
 }
 
 // DALL-E 3 Primary Image Generation

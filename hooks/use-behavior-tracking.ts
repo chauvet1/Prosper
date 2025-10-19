@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
+import { useAuth } from '@workos-inc/authkit-nextjs/components'
 
 interface BehaviorTrackingOptions {
   sessionId: string
@@ -24,6 +25,8 @@ export function useBehaviorTracking({
   const startTimeRef = useRef<number>(Date.now())
   const lastScrollDepthRef = useRef<number>(0)
   const trackedPagesRef = useRef<Set<string>>(new Set())
+  const { user } = useAuth()
+  const isAuthenticated = !!user
 
   // Track behavior action
   const trackAction = useCallback(async (action: {
@@ -34,12 +37,21 @@ export function useBehaviorTracking({
     depth?: number
     data?: any
   }) => {
-    if (!enabled || !sessionId) return
+    if (!enabled || !sessionId || typeof window === 'undefined') return
 
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      
+      // Add authentication token if user is authenticated
+      if (isAuthenticated && user) {
+        // WorkOS AuthKit handles authentication via cookies/session
+        // No need to manually add Bearer token for API calls
+        headers['X-User-ID'] = user.id
+      }
+
       await fetch('/api/recommendations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           sessionId,
           action
@@ -48,7 +60,7 @@ export function useBehaviorTracking({
     } catch (error) {
       console.error('Error tracking behavior:', error)
     }
-  }, [sessionId, enabled])
+  }, [sessionId, enabled, isAuthenticated, user])
 
   // Track page view
   useEffect(() => {

@@ -18,7 +18,7 @@ async function testCompleteGeneration() {
   console.log('============================================')
   console.log('📝 Content: Fallback (Gemini rate limited)')
   console.log('🎨 Images: DALL-E 3 Standard ($0.04-$0.08)')
-  console.log('💾 Database: Prisma Accelerate')
+  console.log('💾 Database: Convex')
   console.log('')
 
   try {
@@ -186,7 +186,7 @@ L'implémentation de ces techniques améliorera considérablement les performanc
       console.log('🚀 Your system is ready for production:')
       console.log('✅ Real AI content generation (when Gemini quota resets)')
       console.log('✅ Real AI image generation with DALL-E 3')
-      console.log('✅ Database storage with Prisma Accelerate')
+      console.log('✅ Database storage with Convex')
       console.log('✅ Cost tracking and metadata')
       console.log('✅ Bilingual support')
       console.log('✅ Professional fallbacks')
