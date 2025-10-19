@@ -7,6 +7,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
+    "test": "npm run lint",
     "setup": "chmod +x scripts/setup.sh && ./scripts/setup.sh",
     "test:gemini": "tsx scripts/test-gemini.ts",
     "test:blog": "tsx scripts/test-real-blog-generation.ts",
